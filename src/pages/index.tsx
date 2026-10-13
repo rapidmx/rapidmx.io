@@ -87,6 +87,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M4 20 20 4" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m15.5 15.5 5.5 5.5" />
+    </>
+  ),
   users: (
     <>
       <circle cx="12" cy="8" r="3.5" />
@@ -149,11 +155,11 @@ function Hero(): ReactNode {
     <header className={styles.hero}>
       <div className={clsx('container', styles.heroInner)}>
         <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>Open source Â· Self-hosted Â· End-to-end encrypted</span>
+          <span className={styles.eyebrow}>Open source · Self-hosted · End-to-end encrypted</span>
           <Heading as="h1" className={styles.heroTitle}>
-            Your organization's mail.
+            An open source all-in-one communications platform.
             <br />
-            <span className={styles.heroAccent}>On your servers. Under your keys.</span>
+            <span className={styles.heroAccent}>Data sovereignty. Privacy first.</span>
           </Heading>
           <p className={styles.heroLead}>
             RapidMX is a complete communications platform you run yourself: email, calendar, contacts, tasks,
@@ -173,10 +179,10 @@ function Hero(): ReactNode {
               <Icon name="check" /> No per-user license fees
             </li>
             <li>
-              <Icon name="check" /> Works with iPhone and Android mail apps
+              <Icon name="check" /> Works with existing apps (via ActiveSync)
             </li>
             <li>
-              <Icon name="check" /> Up and running in an afternoon
+              <Icon name="check" /> Get up and running in an hour
             </li>
           </ul>
         </div>
@@ -210,10 +216,10 @@ function BrowserFrame({src, alt, url}: {src: string; alt: string; url: string}):
  * --------------------------------------------------------------------------------------------- */
 
 const PILLARS = [
-  {value: 'MPL-2.0', label: 'Open-source license'},
-  {value: '0', label: 'Per-user fees'},
+  {value: 'MPL-2.0', label: 'OSI certified license'},
+  {value: '$0', label: 'Per-user fees'},
   {value: 'S/MIME', label: 'End-to-end encryption'},
-  {value: 'Any', label: 'Number of mail domains'},
+  {value: 'Any Domain', label: 'Host from multiple domains'},
 ];
 
 function ProofStrip(): ReactNode {
@@ -240,23 +246,23 @@ const REASONS = [
     icon: 'eye',
     title: 'Nobody else reads your mail',
     body:
-      "Your messages live on hardware you choose, in the country you choose. There's no ad profile, no AI " +
-      'training on your inbox and no provider with a master key. Even your own administrators manage the ' +
-      "platform, not each other's mail.",
+      "Your data lives on hardware you own, in the country you choose. There's no ad profile, no AI " +
+      'training on your inbox and no provider with a master key. Administrators manage the ' +
+      "platform, not everyone's mail.",
   },
   {
     icon: 'scale',
     title: 'Stop paying rent per person',
     body:
-      'Cloud suites charge every user, every month, forever, and raise prices when they like. RapidMX is free ' +
+      'Cloud suites charge every user, every month, forever, and raise prices without notice. RapidMX is free ' +
       'open-source software. You pay for the server it runs on, whether that is ten people or ten thousand.',
   },
   {
     icon: 'move',
     title: 'No lock-in, in or out',
     body:
-      'Bring your history with you by importing mbox and Outlook PST files, and take it with you any time as mbox ' +
-      'or JSON. Your people keep using the phone mail apps they already know.',
+      'Bring your data with you by importing mbox and Outlook PST files, and take it with you any time as mbox ' +
+      'or JSON. Your team keeps using the same apps they already know.',
   },
 ];
 
@@ -266,7 +272,7 @@ function Why(): ReactNode {
       <div className="container">
         <div className={styles.sectionHead}>
           <span className={styles.kicker}>Why RapidMX</span>
-          <Heading as="h2">Communication is the heart of your business. Own it.</Heading>
+          <Heading as="h2">Communication is the heart of your organization. Own it.</Heading>
           <p>
             Every contract, every customer conversation and every internal decision passes through email. RapidMX
             puts that back under your control without asking anyone to give up the tools they're used to.
@@ -321,8 +327,8 @@ const FEATURES: Feature[] = [
     icon: 'video',
     title: 'Video meetings',
     body:
-      'Browser-based video calls you join straight from a calendar invite or a shared link, relayed through ' +
-      'your own TURN server so they work behind strict firewalls.',
+      'Host video calls from your own personal meeting URL or add a private call via calendar invite or shared link, relayed through ' +
+      'your own TURN server so that calls remain private and work even through strict firewalls.',
     to: '/docs/user-guide/video-meetings',
   },
   {
@@ -352,8 +358,8 @@ const FEATURES: Feature[] = [
     icon: 'devices',
     title: 'The apps you already use',
     body:
-      'iPhone, iPad and Android mail apps sync mail, contacts and calendars through Exchange ActiveSync, and ' +
-      'Autodiscover sets them up from just an email address and password. Outlook for Windows support is on the way.',
+      'Supports existing mail apps via Exchange ActiveSync. ' +
+      'Autodiscover makes setup simple with just an email address and password.',
     to: '/docs/clients/overview',
   },
 ];
@@ -366,8 +372,8 @@ function Features(): ReactNode {
           <span className={styles.kicker}>Features</span>
           <Heading as="h2">One platform for how your team communicates</Heading>
           <p>
-            Mail, calendar, contacts and tasks are built in. Video meetings, booking pages, CRM and more are plugins
-            your administrator turns on from the console with a click.
+            Mail, calendar, contacts and tasks are core built-in features. Video meetings, booking pages, CRM and more
+            are shipped as plugins so that you only use what your team needs.
           </p>
         </div>
         <div className={styles.featureGrid}>
@@ -381,7 +387,7 @@ function Features(): ReactNode {
                 {f.badge && <span className={styles.badge}>{f.badge}</span>}
               </Heading>
               <p>{f.body}</p>
-              <span className={styles.featureMore}>Learn more â†’</span>
+              <span className={styles.featureMore}>Learn more</span>
             </Link>
           ))}
         </div>
@@ -407,14 +413,14 @@ const SECURITY = [
     title: 'Modern sign-in',
     body:
       'Passkeys and security keys, authenticator apps, one-time codes and recovery codes. App passwords keep ' +
-      'phone mail apps working with two-step sign-in turned on.',
+      'existing mail apps working, even when two-step sign-in is turned on.',
   },
   {
     icon: 'shield',
     title: 'Spam and malware, fail-closed',
     body:
       'Every message is scored by rspamd and scanned by ClamAV. If a scanner is down, mail is held in quarantine or ' +
-      'sent to Junk, never waved through to the inbox. Your usersâ€™ reports teach the filter.',
+      'sent to Junk, never waved through to the inbox. Your users reports teach the filter.',
   },
   {
     icon: 'globe',
@@ -424,11 +430,11 @@ const SECURITY = [
       'between mail servers.',
   },
   {
-    icon: 'users',
-    title: 'Admins run the platform, not your inbox',
+    icon: 'search',
+    title: 'eDiscovery, scoped to the matter',
     body:
-      'Administrators manage domains, policies and settings. Seeing someoneâ€™s mail takes an explicit, audited ' +
-      'action, and every such action is logged.',
+      'Open a matter to place its custodians under legal hold, then search and export their mail, contacts and ' +
+      'calendars across the matter’s date range. Every search, export and download is audited.',
   },
   {
     icon: 'scale',
@@ -447,8 +453,9 @@ function Security(): ReactNode {
           <span className={styles.kicker}>Privacy and security</span>
           <Heading as="h2">Private by design, not by policy</Heading>
           <p>
-            A privacy policy is a promise. Encryption and self-hosting are guarantees. RapidMX is built so that the
-            safest choice is the default one.
+            A privacy policy is a promise. Encryption and self-hosting are guarantees. RapidMX is the first
+            open-source communications platform with turn-key federated S/MIME encryption — including automated X.509
+            certificate issuance, key discovery and rotation — that works with standard mail clients.
           </p>
         </div>
         <div className={styles.securityGrid}>
@@ -482,7 +489,7 @@ const ADMIN_POINTS = [
   'Transport rules, retention policies, legal hold and eDiscovery search and export',
   'Data-subject export and erasure requests for GDPR and similar laws',
   'A quarantine queue and a complete audit log',
-  'Your own logo, name, colours, header and footer',
+  'Customize with your own logo, name, colours, header and footer',
   'Plugins you search, install, upgrade and remove from the console',
 ];
 
@@ -506,7 +513,7 @@ function Admin(): ReactNode {
             ))}
           </ul>
           <Link to="/docs/administration/admin-console" className={styles.textLink}>
-            Tour the admin console â†’
+            Tour the admin console
           </Link>
         </div>
         <div className={styles.splitShot}>
@@ -524,9 +531,9 @@ function Admin(): ReactNode {
 const DEPLOY_OPTIONS = [
   {
     key: 'single',
-    label: 'One Linux server',
+    label: 'Linux Server',
     blurb:
-      'A single script installs a lightweight Kubernetes (k3s), HTTPS certificates from Letâ€™s Encrypt, Postfix and RapidMX on a Debian, Ubuntu or RHEL server.',
+      'A single script installs a lightweight Kubernetes (k3s), HTTPS certificates from Let\'s Encrypt, Postfix and RapidMX on a Debian, Ubuntu or RHEL server.',
     code: `curl -fsSLO https://raw.githubusercontent.com/rapidmx/server/main/single_node_install.sh
 chmod +x single_node_install.sh
 ./single_node_install.sh --domain example.com --email you@example.com`,
@@ -535,7 +542,7 @@ chmod +x single_node_install.sh
   {
     key: 'k8s',
     label: 'Kubernetes',
-    blurb: 'One Helm chart installs the server, sign-in, Postfix, spam and virus scanning, and the TURN relay for video calls.',
+    blurb: 'One Helm chart installs the RapidMX server, auth server, Postfix, spam and virus scanning, and the TURN relay for video calls.',
     code: `helm upgrade --install --create-namespace --namespace rapidmx rapidmx \\
   oci://ghcr.io/rapidmx/charts/server --version <release> \\
   --set global.domain=example.com \\
@@ -573,10 +580,10 @@ function Deploy(): ReactNode {
       <div className="container">
         <div className={styles.sectionHead}>
           <span className={styles.kicker}>Deploy anywhere</span>
-          <Heading as="h2">Running in an afternoon, wherever you host</Heading>
+          <Heading as="h2">Get up and running in an hour</Heading>
           <p>
             A rented virtual server, the rack in your office or your existing cluster: pick a path and you'll be
-            signing in to your own mail server today. MongoDB or PostgreSQL, disk or S3 storage, Postfix or Amazon SES.
+            signing in to your own mail server today. Choose between MongoDB or PostgreSQL, disk or S3 storage, Postfix or Amazon SES.
           </p>
         </div>
         <div className={styles.deploy}>
@@ -597,7 +604,7 @@ function Deploy(): ReactNode {
             <p>{option.blurb}</p>
             <CodeBlock language="bash">{option.code}</CodeBlock>
             <Link to={option.to} className={styles.textLink}>
-              Full instructions â†’
+              Full instructions
             </Link>
           </div>
         </div>
@@ -622,12 +629,12 @@ const COMPARE: {row: string; rmx: Cell; google: Cell; ms: Cell}[] = [
   {row: 'You choose where data is stored', rmx: yes('Any country, any host'), google: partial('Data regions on some plans'), ms: partial('Data residency on some plans')},
   {row: 'End-to-end encryption for every user', rmx: yes('S/MIME, built in'), google: partial('Client-side encryption on top tiers'), ms: partial('S/MIME with your own PKI')},
   {row: 'Mail, calendar, contacts and tasks', rmx: yes(), google: yes(), ms: yes()},
-  {row: 'Video meetings and booking pages', rmx: yes('Plugins'), google: yes(), ms: yes()},
-  {row: 'Works with phone mail apps', rmx: yes('Exchange ActiveSync'), google: yes(), ms: yes()},
-  {row: 'Works with Outlook for Windows', rmx: partial('MAPI over HTTP, in progress'), google: partial('Through a sync tool'), ms: yes()},
+  {row: 'Video meetings', rmx: yes('via Plugin'), google: yes(), ms: yes()},
+  {row: 'Booking pages', rmx: yes('via Plugin'), google: yes(), ms: yes()},
+  {row: 'Works with existing apps', rmx: yes('Exchange ActiveSync'), google: yes(), ms: yes()},
   {row: 'Retention, legal hold and eDiscovery', rmx: yes('Included'), google: partial('Higher tiers'), ms: partial('Higher tiers')},
   {row: 'Extend with your own plugins', rmx: yes('npm packages'), google: partial('Marketplace add-ons'), ms: partial('Add-ins')},
-  {row: 'Documents, spreadsheets and file storage', rmx: no('Not included'), google: yes(), ms: yes()},
+  {row: 'Documents, spreadsheets and file storage', rmx: no('Coming soon'), google: yes(), ms: yes()},
 ];
 
 function Mark({cell}: {cell: Cell}): ReactNode {
@@ -651,7 +658,7 @@ function Compare(): ReactNode {
           <Heading as="h2">How RapidMX stacks up</Heading>
           <p>
             RapidMX focuses on communication: mail, scheduling and meetings. If that's what you rely on Google
-            Workspace or Microsoft 365 for, here's what changes when you run it yourself.
+            Workspace or Microsoft 365 for, here's what changes when switch to RapidMX.
           </p>
         </div>
         <div className={styles.compareWrap}>
@@ -705,10 +712,9 @@ function Developers(): ReactNode {
           <span className={styles.kicker}>Open source</span>
           <Heading as="h2">Built in the open, made to be extended</Heading>
           <p>
-            RapidMX is written in TypeScript on the <Link href="https://rapidrest.dev">RapidREST</Link> framework,
-            with a React web app and a plugin system that lets you add API routes, pages, navigation and settings as
-            ordinary npm packages. Exchange ActiveSync, MAPI, booking pages and video meetings are all plugins
-            themselves.
+            RapidMX is written in TypeScript using the <Link href="https://rapidrest.dev">RapidREST</Link> framework,
+            with a React-based web client and Tauri-based desktop/mobile app. The plugin system lets you expand the
+            server's capabilities. Exchange ActiveSync, booking pages and video meetings are all plugins themselves.
           </p>
           <div className={styles.heroButtons}>
             <Link className={clsx('button button--lg', styles.buttonPrimary)} to="/developers/intro">
@@ -724,17 +730,17 @@ function Developers(): ReactNode {
             <div className={styles.devCard}>
               <Icon name="plug" />
               <strong>Plugins</strong>
-              <span>Routes, models, pages and settings, installed from the admin console</span>
+              <span>Add custom routes, models, background jobs, pages and settings, installed from the admin console</span>
             </div>
             <div className={styles.devCard}>
               <Icon name="code" />
               <strong>REST API</strong>
-              <span>Everything the web app does, available to your own tools</span>
+              <span>OpenAPI compatible. Everything the web app does, available to your own tools</span>
             </div>
             <div className={styles.devCard}>
               <Icon name="globe" />
               <strong>Open protocols</strong>
-              <span>S/MIME, ActiveSync, MAPI over HTTP, Autodiscover, ACME</span>
+              <span>S/MIME, ActiveSync, Autodiscover, ACME</span>
             </div>
             <div className={styles.devCard}>
               <Icon name="users" />
@@ -758,7 +764,7 @@ const FAQ: {q: string; a: ReactNode}[] = [
     a: (
       <>
         Yes. RapidMX is open-source software under the Mozilla Public License 2.0, with no per-user fees and no paid
-        tier. Your costs are the server, storage and bandwidth you run it on.
+        tiers or subscriptions. Your costs are the server, storage and bandwidth you run it on.
       </>
     ),
   },
@@ -776,7 +782,7 @@ const FAQ: {q: string; a: ReactNode}[] = [
     q: 'Do I need to know Kubernetes?',
     a: (
       <>
-        No. The single-server installer sets up and manages a small Kubernetes (k3s) for you. If you already run a
+        No. The single-server installer sets up and manages a small single-node Kubernetes (k3s) cluster for you. If you already run a
         cluster, the Helm chart fits right in.
       </>
     ),
@@ -794,9 +800,9 @@ const FAQ: {q: string; a: ReactNode}[] = [
     q: 'Will my team have to change apps?',
     a: (
       <>
-        For most people, no. The built-in mail apps on iPhone, iPad and Android connect through Exchange
-        ActiveSync. Support for Outlook for Windows, over MAPI over HTTP, is still being finished. There's also a fast web app that works in any
-        modern browser. RapidMX does not offer IMAP or POP3.
+        For most people, no. The built-in mail apps on Android, iOS, and Windows connect through Exchange
+        ActiveSync. Support for Outlook for Windows, over MAPI over HTTP, is still being finished. The built-in web app
+        works in any modern browser. RapidMX does not support IMAP or POP3.
       </>
     ),
   },
