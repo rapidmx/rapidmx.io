@@ -1,0 +1,137 @@
+/**
+ * Site-wide theme. Colours and fonts follow the RapidMX web app's own tokens
+ * (server/public/styles/globals.css): teal primary, gold accent, Blender Pro for display type.
+ * No web fonts are fetched from third parties: Blender Pro is self-hosted and body text uses the
+ * system font stack.
+ */
+
+@font-face {
+  font-family: 'Blender Pro';
+  src: url('/fonts/Blender-Pro-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Blender Pro';
+  src: url('/fonts/Blender-Pro-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --ifm-color-primary: #0d9488;
+  --ifm-color-primary-dark: #0c857a;
+  --ifm-color-primary-darker: #0b7e73;
+  --ifm-color-primary-darkest: #09685f;
+  --ifm-color-primary-light: #0ea397;
+  --ifm-color-primary-lighter: #0faa9d;
+  --ifm-color-primary-lightest: #11c0b1;
+
+  --rmx-accent: #a3690a;
+  --rmx-accent-soft: #c98a1d;
+  --rmx-accent-pale: #fbe9c2;
+  --rmx-surface-alt: #f5f7f8;
+  --rmx-border: #e3e8ea;
+  --rmx-text-muted: #5a6b6e;
+  --rmx-hero-from: #0b1416;
+  --rmx-hero-to: #0f3b38;
+
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell,
+    'Noto Sans', sans-serif;
+  --rmx-font-display: 'Blender Pro', var(--ifm-font-family-base);
+  --ifm-heading-font-family: var(--rmx-font-display);
+  --ifm-heading-font-weight: 700;
+
+  --ifm-code-font-size: 92%;
+  --ifm-navbar-height: 4rem;
+  --docusaurus-highlighted-code-line-bg: rgba(13, 148, 136, 0.12);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #2dd4bf;
+  --ifm-color-primary-dark: #22c9b3;
+  --ifm-color-primary-darker: #20bea9;
+  --ifm-color-primary-darkest: #1a9c8b;
+  --ifm-color-primary-light: #45d9c6;
+  --ifm-color-primary-lighter: #50dbc9;
+  --ifm-color-primary-lightest: #73e3d5;
+
+  --rmx-accent: #f2af0d;
+  --rmx-accent-soft: #f6ca5f;
+  --rmx-accent-pale: #3a2c0b;
+  --rmx-surface-alt: #1b2022;
+  --rmx-border: #313a3d;
+  --rmx-text-muted: #9fb0b3;
+
+  --ifm-background-color: #14181a;
+  --ifm-background-surface-color: #1b2022;
+  --docusaurus-highlighted-code-line-bg: rgba(45, 212, 191, 0.15);
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: 0.01em;
+}
+
+.navbar__title {
+  font-family: var(--rmx-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.navbar__logo {
+  height: 2.1rem;
+}
+
+/* The "Get started" call to action in the navbar. */
+.navbar__cta {
+  background: var(--ifm-color-primary);
+  color: #fff !important;
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+
+.navbar__cta:hover {
+  background: var(--ifm-color-primary-dark);
+  text-decoration: none;
+}
+
+[data-theme='dark'] .navbar__cta {
+  color: #0b1416 !important;
+}
+
+@media (max-width: 996px) {
+  .navbar__cta {
+    display: none;
+  }
+}
+
+.footer--dark {
+  --ifm-footer-background-color: #0b1416;
+}
+
+/* Docs: give screenshots a frame so white UI doesn't bleed into the page. */
+.markdown img {
+  border-radius: 0.6rem;
+  border: 1px solid var(--rmx-border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.markdown table {
+  display: table;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .markdown table {
+    display: block;
+    overflow-x: auto;
+  }
+}
