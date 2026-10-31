@@ -49,9 +49,9 @@ Impersonating signs you in as the mailbox's owner, so you see and can do everyth
 
 Keep in mind:
 
-- This is the only way an administrator sees another user's mail, and it's recorded in the sign-in server's audit log.
+- This is the only way an administrator sees another user's mail that isn't encrypted, and it's recorded in the sign-in server's audit log.
 - While impersonating, you act as that person with their access, not yours: anything you send or change is done as them, and the **Admin Console** link is hidden until you return.
-- Mail the person encrypted end to end stays unreadable unless their key vault is unlocked with their own encryption password or recovery code. Impersonation doesn't bypass encryption. See [Encryption and certificates](encryption-and-certificates.md).
+- Mail encrypted end to end to the person, and everything protected by zero-access encryption, stays unreadable unless their key vault is unlocked with their own encryption password or recovery code. Impersonation doesn't bypass encryption, and the person's zero-access settings can't be changed while impersonating. See [Encryption and certificates](encryption-and-certificates.md).
 
 The button only appears on mailboxes that have an owner.
 

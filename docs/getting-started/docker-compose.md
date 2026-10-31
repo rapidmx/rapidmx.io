@@ -127,6 +127,14 @@ you deploy](before-you-deploy.md).
    SENDMAIL_RELAY_HOST=postfix
    ```
 
+   :::warning Compose needs a configuration keyring of its own
+   With `NODE_ENV=production` the server also refuses to start without a [configuration
+   keyring](../operations/secrets-and-openbao.md#the-configuration-keyring), and the Compose files don't provide one.
+   Add `config_encryption__keyring` to the server's `environment` in the compose file, holding
+   `{"keys":[{"kid":"k1","key":"<32 bytes, base64>","createdAt":"2026-10-30T00:00:00Z"}]}`, with the key from
+   `openssl rand -base64 32`. Back it up with your database. A keyring given this way can't be rotated from the admin console.
+   :::
+
    :::warning
    With `NODE_ENV=production` the server refuses to start while its sign-in secret, cookie secret or mail ingest
    secret is empty or still a development default. Never change `ESCROW_AUDIT_HMAC_KEY` after the first start: escrow

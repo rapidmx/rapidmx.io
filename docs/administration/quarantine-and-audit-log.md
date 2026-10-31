@@ -23,7 +23,7 @@ A message is quarantined instead of delivered when:
 | `quota_exceeded` | Delivering it would have taken the mailbox over its quota |
 | `spam_policy`, `other` | Held by a spam policy or for another reason |
 
-A quarantined message never appears in any folder or on any device. Spam doesn't normally end up here: it goes to the person's Junk Email folder.
+A quarantined message for a mailbox protected by [zero-access encryption](encryption-and-certificates.md#zero-access-encryption) is sealed like the rest of its mail, so you can't preview its contents. A quarantined message never appears in any folder or on any device. Spam doesn't normally end up here: it goes to the person's Junk Email folder.
 
 ### Review a mailbox's quarantine
 

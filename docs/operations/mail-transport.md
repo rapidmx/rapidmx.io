@@ -131,6 +131,45 @@ and writes the private key to the DKIM volume, where Postfix reads it.
 Because both pods mount the same `ReadWriteOnce` volume, the server and Postfix must run on the same node. The DKIM
 keys can't be recreated: back them up, see [Backup and restore](backup-and-restore.md).
 
+### Key rotation
+
+The server rotates the DKIM keys it made itself, per domain, so an old or leaked key doesn't stay good forever. A domain
+signs with the global selector until its first rotation. Each rotation then makes a new selector, `rmx<yyyymmdd>`, and
+moves through these phases:
+
+1. The new record is published, by the [DNS provider](../administration/dns-publishing.md) the domain is assigned to, or
+   shown on the domain's DNS checklist for you to add.
+2. Signing switches once the record has been live for `publish_grace_hours` and Postfix has acknowledged the switch.
+3. The old record stays published for `overlap_days`, and then the old record and key are removed.
+
+Scheduled rotation is on by default, and needs postfix-bridge 1.6.0 or later, which the chart pins. With an older
+postfix-bridge, turn it off. Keys imported by hand, deployments that send through SES and key providers that can't rotate
+are never rotated. Start, pause or cancel a rotation in the domain's DKIM panel in the admin console.
+
+| Setting | Default | What it is |
+| --- | --- | --- |
+| `mail:dkim:rotation:enabled` | `true` | Start rotations on schedule. Rotating by hand works either way. |
+| `mail:dkim:rotation:interval_days` | `180` | Days before the next rotation starts |
+| `mail:dkim:rotation:overlap_days` | `7` | Days the old record stays published after signing switches |
+| `mail:dkim:rotation:publish_grace_hours` | `48` | Hours the new record must be live before signing switches |
+| `mail:dkim:rotation:key_bits` | `2048` | RSA size of each new key, 2048 to 4096 |
+| `mail:dkim:rotation:max_starts_per_run` | `10` | Rotations started per hourly run and server copy |
+
+:::warning If you publish DNS by hand
+After you upgrade to a release with rotation on by default, every domain older than `interval_days` starts a rotation
+within the first runs. Its new `rmx<date>._domainkey` TXT record shows as missing on the domain's DNS checklist. Add it:
+signing keeps using the old key until it is live. To opt out, set
+`service.config.mail__dkim__rotation__enabled=false`.
+:::
+
+### Oversigning `Autocrypt` and `RapidMX-Key`
+
+Outgoing mail announces each mailbox's keys in the `RapidMX-Key` and `Autocrypt` headers. A receiver only trusts those
+headers when the message's DKIM signature **oversigns** them, which stops anyone adding a second copy after signing.
+Your MTA's DKIM signing has to be configured to do this; otherwise, receivers that check ignore the headers. The
+postfix-bridge 1.6.0 chart doesn't set it for you. Key lookups that don't use the headers, such as discovery and the Web
+Key Directory, still work.
+
 ## Sender verification: `mail.trustedAuthservId`
 
 Some features need to know that a message really came from the address in its From line: members-only distribution

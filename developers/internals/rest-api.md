@@ -43,14 +43,14 @@ version, so there is no `/api/v1`.
 
 | Prefix | What is there |
 | --- | --- |
-| `/api/mail/` | The mail data: `mailboxes` (also key vault, key lookup and escrow info, under `/:id/`), `folders`, `messages`, `attachments`, `labels`, `mail-filter-rules`, `mail-signatures`, `search`, `compose`, `focused-inbox-overrides`, `preferences/appearance`, `directory` |
+| `/api/mail/` | The mail data: `mailboxes` (also key vault, key lookup, escrow info and `search-index`, under `/:id/`), `folders`, `messages`, `attachments`, `labels`, `mail-filter-rules`, `mail-signatures`, `search`, `compose`, `focused-inbox-overrides`, `preferences/appearance`, `directory` |
 | `/api/mail/` (PIM) | `calendar-events`, `calendar-share-links`, `contacts`, `contact-lists`, `notes`, `tasks`, `task-lists` |
 | `/api/mail/` (administration) | `domains`, `distribution-lists`, `transport-rules`, `quarantine`, `ingest-queue`, `audit-log`, `data-export-requests`, `erasure-requests`, `mailbox-import-requests` |
-| `/api/system/` | Deployment-wide settings: `branding`, `encryption-policy`, `mailbox-policy`, `retention-policy`, `plugins`, `setup`, `signing-enrollment` |
+| `/api/system/` | Deployment-wide settings: `branding`, `encryption-policy`, `mailbox-policy`, `retention-policy`, `plugins`, `setup`, `signing-enrollment`, `dns-providers`, `integrations`, `config-keys` |
 | `/api/escrow/` | Key escrow and eDiscovery: `scopes`, `access-requests`, `audit-log`, `matters`, `matter-search`, `matter-export-requests` |
 | `/api/admin/` | `diagnostics`, `signing-enrollments`, and the framework's admin routes |
 | `/api/` | Framework routes: `acls`, `openapi`, `status` (readiness), `metrics` (needs a trusted role) |
-| No `/api` prefix | `/push` (WebSocket), `/.well-known/rapidmx/keys` and `/.well-known/rapidmx/server-info` (public), `/internal/mta` (the mail transport's ingest, see [Mail flow](mail-flow.md)), the pages (`/`, `/settings`, `/admin`, `/escrow`), static assets |
+| No `/api` prefix | `/push` (WebSocket), `/.well-known/rapidmx/keys`, `/.well-known/rapidmx/server-info` and `/.well-known/openpgpkey` (public), `/internal/mta` (the mail transport's ingest, see [Mail flow](mail-flow.md)), `/internal/dns` (for dns-controller only), the pages (`/`, `/settings`, `/admin`, `/escrow`), static assets |
 
 Plugins add their own routes, by convention under `/api/mail/<plugin>`; the protocol plugins add
 `/Microsoft-Server-ActiveSync`, `/mapi/emsmdb`, `/mapi/nspi` and `/autodiscover` (see [Protocols](protocols.md)).
@@ -139,6 +139,28 @@ The conventions are RapidREST's:
 
 Mailbox-scoped routes add their own rules on top (server-minted uids, scoped list queries, quiet 404s for denied reads);
 the doc comment on `BaseScopedChildRoute` in `@rapidmx/restapi` lists them.
+
+### Zero-access records
+
+A mailbox's contacts, calendar events and tasks may be protected by
+[zero-access encryption](encryption.md#zero-access-encryption). Readable columns then hold placeholders, and a REST client
+has to handle that:
+
+- **Name the sealed fields you clear.** An empty value for a sealed field counts as a clear only when the body lists the
+  field in `clearedFields: string[]`, which is never stored. Anything but a list of at most 100 strings is a 400. Otherwise
+  the empty value, or a placeholder sent back unchanged, is ignored. `PUT /:id/:property` can't carry the list, so use a full
+  `PUT` to clear a sealed field.
+- **Reading a sealed message.** `GET /content` answers `409 zero_access`. Read `/raw` and decrypt on the client.
+- **Filtering.** Filtering or sorting tasks by title or notes answers 400.
+
+Besides a stale `version`, these answer 409:
+
+- moving a protected contact, event or task to another mailbox (copy it instead);
+- a content change to an event filed from a zero-access invitation sent without its opened title, or detaching an
+  occurrence once the series' key is gone;
+- changing the subject, sender, recipients, Message-ID or envelope recipients of a message already sent;
+- giving an owner to an ownerless zero-access mailbox whose keys exist only as member and escrow wraps;
+- `POST /mailbox-import-requests` for a mailbox whose mail is zero-access.
 
 ## Realtime updates
 

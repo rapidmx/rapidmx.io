@@ -110,6 +110,21 @@ A plugin that sends mail should go through the same path as the server, so the m
 is relayed by the configured transport. ActiveSync and MAPI use `scanAndRelay()` from `@rapidmx/restapi` for this. See
 [Mail flow](../internals/mail-flow.md) for what happens after that.
 
+### Writing to a zero-access mailbox
+
+The server can't read a mailbox's data once [zero-access encryption](../internals/encryption.md#zero-access-encryption)
+protects it, and it must not store plaintext for it. If your plugin writes a mailbox's contacts, calendar events, tasks or
+messages, seal what you write, as the booking plugin does in `BaseBookingRoute`:
+
+- **Records.** `newZeroAccessRecordSealer()` from `@rapidmx/restapi` gives you a sealer. Call
+  `sealWrite("calendar", mailbox, fields)` before saving. It seals when that type is protected for the mailbox and leaves
+  the fields readable otherwise.
+- **Mail.** `newZeroAccessWriter()` gives you a writer whose `sealRaw()` files a message. It also seals drafts, with `sealDraft()`.
+- **Invitations.** `MeetingSchedulingJob` never invites for a protected event, because all it could send is the placeholder.
+  Compose them yourself with `MeetingInviteSender` and its `sendProtectedInvitations()`.
+- **Reading.** Never treat a value you read from such a mailbox as real content. It may be a placeholder such as
+  `Protected event`, and sending it back must not overwrite the sealed value.
+
 ### Live updates
 
 `NotificationUtils.sendMessage(channelUid, type, action, data)` from `@rapidrest/service-core` publishes a message to
@@ -226,6 +241,10 @@ the server appends to (`message.delivered`, `message.sent` and `send.failed` eve
 is handled by one server copy. Set `consumerGroup`, optionally narrow `eventTypes`, and implement
 `handle(event, id)`. Events are delivered at least once, so the handler must be idempotent. A group starts at the end of
 the stream the first time it runs: events from before the plugin was installed are not replayed.
+
+For a zero-access mailbox's mail, events carry envelope fields only. A `message.delivered` event is marked
+`zeroAccess: true`, with no subject and no parsed delivery report, so a plugin can't process a bounce that lands in such a
+mailbox.
 
 ## Working with other plugins
 

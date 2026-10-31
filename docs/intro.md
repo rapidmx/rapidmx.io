@@ -8,10 +8,13 @@ slug: /
 # What is RapidMX?
 
 RapidMX is a mail and collaboration server that you run yourself. One deployment gives a whole
-organization email, calendars, contacts and tasks, with end-to-end encryption, spam and virus
-scanning, and an admin console for as many mail domains as you host. Optional plugins add video
+organization email, calendars, contacts and tasks, with zero-access and end-to-end encryption, spam and virus
+scanning. It supports any number of domains that you desire to host. Optional plugins add video
 meetings, public booking pages, a CRM and more.
 
+This project was created to solve two problems. First, to address the growing need for more direct
+control and ownership of data and infrastructure in an increasingly cloud based economy. Second, to make
+true end-to-end encryption with email more accessible and easy to use.
 It exists for organizations that want what a hosted suite gives them, without their mail living in
 someone else's cloud. Your messages, keys and logs stay on infrastructure you choose, and the code
 that handles them is open source under the Mozilla Public License 2.0.
@@ -84,6 +87,7 @@ flowchart LR
 | **MongoDB or PostgreSQL**, **Redis** | The database, and a cache and message bus shared by the server's copies. |
 | **Message storage** | Message bodies and attachments, on a volume or in S3-compatible storage. |
 | **OpenBao** (optional) | Keeps the deployment's secrets and the encryption certificate authority's key in a vault. |
+| **DNS controller** and **external-dns** (optional) | Publish each domain's DNS records through your DNS provider. See [Automatic DNS](administration/dns-publishing.md). |
 | **coturn** (optional) | Relays video-call media for participants behind strict firewalls. |
 
 ## Find your way around

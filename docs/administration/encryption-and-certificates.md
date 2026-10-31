@@ -1,28 +1,31 @@
 ---
 sidebar_position: 8
 title: Encryption and certificates
-description: Set the end-to-end encryption policy for each kind of mail, and understand where encryption and signing certificates come from and how to issue signing certificates by hand.
+description: Set the encryption policy, including zero-access encryption and OpenPGP, and understand where encryption and signing certificates come from and how to issue signing certificates by hand.
 ---
 
 # Encryption and certificates
 
-RapidMX can encrypt mail end to end with S/MIME. Encryption and decryption happen in each person's browser, with keys kept in a personal key vault that only they can unlock (with their encryption password, a recovery code or a passkey). An encrypted message can be read by its sender and recipients, and not by the server or its administrators.
+RapidMX protects mail in two ways, both with keys kept in a personal key vault that only each person can unlock (with their encryption password, a recovery code or a passkey):
+
+- **Zero-access encryption** seals stored mail, calendars, contacts and tasks to a key only the mailbox's users hold. It covers everything, with no key exchange, but the server does see each item while it processes it. See [Zero-access encryption](#zero-access-encryption).
+- **End-to-end encryption**, with S/MIME or OpenPGP, happens in each person's browser. Its messages can be read by their sender and recipients, and never by the server.
 
 As an administrator you decide **when** encryption is used, through the encryption policy, and you keep the certificates flowing that make encryption and signing work. How people use encryption day to day is in [Encryption](../user-guide/encryption.md).
 
 :::caution
-Because the server can't read encrypted mail, a person who loses their encryption password **and** their recovery codes loses their encrypted mail, unless their mailbox is covered by [key escrow](key-escrow.md). Decide on escrow before people start encrypting.
+Because the server can't read encrypted mail, a person who loses their encryption password **and** their recovery codes loses their encrypted mail, unless their mailbox is covered by [key escrow](key-escrow.md). With zero-access encryption on by default, that means **their whole mailbox**, not just the messages they chose to encrypt. Decide on escrow before people start using the server.
 :::
 
 ## Encryption policy
 
-Open **Encryption Policy**. The policy has one setting for each kind of mail:
+Open **Encryption Policy**. Under **End-to-end encryption** the policy has one setting for each kind of mail:
 
 | Setting | Applies to |
 | --- | --- |
 | **Mail within this server** | Messages between mailboxes hosted on this server |
 | **Mail to other RapidMX servers** | Messages to people on another RapidMX server that publishes its encryption keys |
-| **Mail to everyone else** | Messages to any other e-mail provider, using S/MIME |
+| **Mail to everyone else** | Messages to any other e-mail provider |
 
 Each one can be:
 
@@ -34,11 +37,63 @@ Choose **Save**. Changing a setting to **Never encrypt** asks you to confirm wit
 
 **Never encrypt** and **Let people choose** are deliberately different. Use **Never encrypt** when your organization has to be able to review that mail (some supervisory or archiving obligations require it); use **Let people choose** when routine encryption isn't wanted but some conversations, such as privileged legal communication, must still be encryptable.
 
+Below those are two switches, both on by default:
+
+- **Allow zero-access encryption**. See [Zero-access encryption](#zero-access-encryption).
+- **Allow OpenPGP** gives every mailbox an OpenPGP key and publishes it. See [OpenPGP](#openpgp).
+
 The policy applies to the whole server. Every signed-in user can read it, because the mail app uses it to decide which encryption controls to offer.
+
+## Zero-access encryption
+
+Zero-access encryption closes the gap end-to-end encryption leaves: the invoice, the newsletter and all the other mail from people who will never have a key. As a message arrives, after spam and virus scanning, the server encrypts it to the mailbox's public key and discards the readable copy. Because it uses only the public key, the server holds nothing that can decrypt the result.
+
+**It defeats** theft of the mail store, exposed backups, an administrator browsing storage and impersonation. **It doesn't defeat** a compromised or malicious server at the moment of delivery, because the server does see the plaintext then. Don't describe it as end-to-end encryption.
+
+A mailbox is protected once all of these are true:
+
+1. **Allow zero-access encryption** is on. It is on by default, and is the only control administrators have.
+2. The mailbox's owner hasn't turned off **Enable zero-access encryption** for it.
+3. The mailbox has a zero-access key. It gets one when its user next signs in to the web app and unlocks, so **a mailbox nobody has opened is stored as before**.
+
+A background job then seals what the mailbox already held. Each owner also chooses which of mail, calendar, contacts and tasks to protect. See [what is and isn't encrypted](../user-guide/encryption.md#what-is-and-isnt-encrypted).
+
+Turning **Allow zero-access encryption** off affects only what arrives afterwards. Sealed mail stays sealed, since the server can't decrypt it, and every user sees in their settings that an administrator turned it off.
+
+### What you give up
+
+Once a mailbox is protected, the server can no longer do anything that means reading its stored content:
+
+| Feature | With zero-access |
+| --- | --- |
+| Spam and virus scanning at delivery | Unchanged: it runs before sealing |
+| Transport rules | Unchanged: they run before sealing |
+| Mail filters on message text | Can't be applied to stored mail |
+| Search of message contents | Runs on the user's device, not the server |
+| Rescanning stored mail for viruses | Not possible |
+| Quarantine preview | Not available for that mailbox |
+| [eDiscovery](compliance.md#ediscovery) | Works on sender, recipient and date. Contents need the keys released through [key escrow](key-escrow.md). |
+| Server-side mailbox import | Refused. An import already queued is sealed message by message. |
+| Plugins | Mail events carry envelope details only, so a plugin can't process a bounce that lands in a protected mailbox |
+| Outlook and phones | See [phones and Outlook](../user-guide/encryption.md#on-phones-and-in-outlook) |
+
+A message waiting to be sent stays readable in the Outbox until it is relayed, for hours if it's scheduled, and then its Sent Items copy is sealed. A scheduled message someone deleted stays readable for 30 days, so that restoring it can still send it (`mail:jobs:zero_access_backfill:deleted_scheduled_send_days`).
+
+Turn it off in the policy if your organization must keep mail readable on the server, such as for supervisory review or a compliance archive.
+
+## OpenPGP
+
+OpenPGP is how you exchange encrypted mail with people on Proton Mail, Thunderbird, GnuPG and other OpenPGP apps. S/MIME stays RapidMX's own format and is used whenever a recipient can receive it. With **Allow OpenPGP** on:
+
+- Each mailbox gets an OpenPGP key on its user's next unlock. There's no certificate authority involved: the key is self-certified, and the server checks it. Its secret key is escrowed exactly like the encryption key.
+- RapidMX publishes keys through a Web Key Directory at `/.well-known/openpgpkey`, which is how Proton Mail finds them, and in an `Autocrypt` header on outgoing mail. Public keyservers are never consulted, since they would reveal who your users write to.
+- Off, no OpenPGP keys are created or published, and S/MIME is unaffected.
+
+OpenPGP apps look first at `openpgpkey.example.com`. Add the **OpenPGP keys (CNAME)** record from each domain's [DNS checklist](domains.md#the-dns-setup-checklist), and have your TLS certificate cover it. See `mail.wkd.openpgpkeyHost.enabled` in [Helm chart](../operations/helm-chart.md).
 
 ## Where certificates come from
 
-S/MIME uses two kinds of certificates for each mailbox, and they come from different places.
+S/MIME uses two kinds of certificates for each mailbox, and they come from different places. OpenPGP keys need neither.
 
 ### Encryption certificates
 
@@ -46,7 +101,7 @@ The certificates that let others encrypt mail **to** a mailbox are issued by a c
 
 ### Digital signature certificates
 
-A signing certificate lets a person **digitally sign** mail, so recipients can check who sent it and that it wasn't changed. A person requests one from **Settings → Encryption** in the mail app. How it's issued depends on the server's signing backend, set in the Helm chart (`mail.signingEnrollment.backend`):
+A signing certificate lets a person **digitally sign** mail, so recipients can check who sent it and that it wasn't changed. A person requests one from **Settings → Encryption** in the mail app. How it's issued depends on the server's signing backend, set in the Helm chart (`mail.signingEnrollment.backend`) or under **Integrations** > **S/MIME signing CA**, which takes effect without a restart:
 
 | Backend | How a certificate is issued | When it's chosen by `auto` (the default) |
 | --- | --- | --- |

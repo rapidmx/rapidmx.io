@@ -23,7 +23,7 @@ An **escrow scope** is a named key pair plus the list of people who hold it.
 1. The scope's **public key** is stored on the server. Its **private key** is kept offline by the holders. The server never has it.
 2. When a mailbox is assigned to the scope, the owner's mail app adds a copy of the mailbox's key, encrypted to the scope's public key. Only the owner's browser can do this, since only it can unlock their key vault.
 3. To recover mail, holders open a matter, request access to a mailbox under it, and approve the request until the threshold is met.
-4. The server then hands out that encrypted copy. It's still encrypted: the holders decrypt it with the scope's private key in their own offline tooling. The server can't decrypt anything at any point.
+4. The server then hands out that encrypted copy. It's still encrypted: the holders decrypt it with the scope's private key in their own offline tooling. The server can't decrypt anything at any point. A release covers the mailbox's zero-access, encryption and OpenPGP keys, never its signing key.
 
 ## Separation of duties
 
@@ -117,7 +117,7 @@ A matter's page can also:
 - **Search this matter's custodians**, with free text or the same filters as mail search (for example `from:alice@example.com`). See [Search](../user-guide/search.md).
 - **Export this matter**: choose **+ New export** to collect the custodians' messages (limited to the matter's date range) plus their contacts, calendar events, tasks and notes into one NDJSON file, and **Download** it once it's ready.
 
-Searching and exporting read mail that is already stored and don't release any keys, so they don't need dual control: any single holder of the scope can do them. Encrypted messages stay encrypted in an export. Every search, export and download is audited.
+Searching and exporting read mail that is already stored and don't release any keys, so they don't need dual control: any single holder of the scope can do them. Encrypted messages stay encrypted in an export, and so does anything protected by [zero-access encryption](encryption-and-certificates.md#zero-access-encryption): for such a mailbox a search reaches only sender, recipient, date and folder, and contents need the keys released through a request. Every search, export and download is audited.
 
 ### Close the matter
 

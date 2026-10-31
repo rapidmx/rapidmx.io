@@ -81,4 +81,6 @@ Your administrator can change these. If you refuse them, the account won't sync.
 
 ## Encrypted mail on your phone
 
-End-to-end encrypted messages are decrypted with your private key, which stays in your encrypted key vault and is unlocked in the web app. RapidMX currently has no way to copy that key to a phone, so read and send encrypted mail in the [web app](web.md). See [Encryption](../user-guide/encryption.md).
+Mail protected by zero-access or end-to-end encryption is decrypted with your private keys, which stay in your encrypted key vault. To read it on a phone, export your keys from the web app and install them on the phone. Without them the phone shows an explanation instead. See [On phones and in Outlook](../user-guide/encryption.md#on-phones-and-in-outlook).
+
+Phones can't open protected calendar events, contacts or tasks, even with your keys: they show "Protected event" busy blocks, contacts by email address only, and "Protected task". A type your phone already syncs starts unprotected for this reason, and each switch in **Settings** > **Encryption** says what it would break. Changing a protected meeting on a phone doesn't notify attendees until it is next saved in RapidMX.

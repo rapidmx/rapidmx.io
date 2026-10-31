@@ -48,6 +48,7 @@ together at runtime.
 
 | Repository | Package | What it is | Status |
 | --- | --- | --- | --- |
+| [dns-controller](https://github.com/rapidmx/dns-controller) | Image `ghcr.io/rapidmx/dns-controller` | Publishes the DNS records a deployment and its domains need through external-dns. The server's chart templates it and pins its version. | Early (`0.1`), image only |
 | [acme-server](https://github.com/rapidmx/acme-server) | Image `ghcr.io/rapidmx/acme`, chart `oci://ghcr.io/rapidmx/charts/acme` | A standalone ACME certificate authority for S/MIME certificates, planned for `acme.rapidmx.io`. Its root is not in any public trust store. | Early (`0.x`), private npm package |
 | [tauri-client](https://github.com/rapidmx/tauri-client) | None (an app) | The native desktop and mobile app, built with Tauri v2 (Rust plus the web-client pages). | Preview. Not packaged or signed yet. |
 | [react-shared](https://github.com/rapidmx/react-shared) | [`@rapidmx/react-shared`](https://www.npmjs.com/package/@rapidmx/react-shared) | Former shared React library. | Merged into `@rapidmx/web-client` as its `lib/` directory. Nothing builds here any more. |

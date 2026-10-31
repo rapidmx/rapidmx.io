@@ -29,7 +29,9 @@ RapidMX has no IMAP or POP3, so mail apps that only speak those can't connect. A
 | Tasks | Yes | Yes, in apps that show them | Read only |
 | Shared and delegated mailboxes | Yes | Use the web app | No |
 | Rules and automatic replies settings | Yes | Automatic replies, where the app offers it | No |
-| End-to-end encryption | Yes | No, use the web app | No, use the web app |
+| End-to-end encryption | Yes | Reads it with [exported keys](../user-guide/encryption.md#on-phones-and-in-outlook) | Reads it with [exported keys](../user-guide/encryption.md#on-phones-and-in-outlook) |
+| Zero-access mail | Yes | Reads it with exported keys | Reads it with exported keys |
+| Zero-access calendar, contacts, tasks | Yes | Placeholders only | Placeholders only |
 | Encrypted search index | Yes | No | No |
 | Plugins (booking pages, video meetings, chat, CRM) | Yes | No | No |
 | How you sign in | Your normal sign-in, passkeys and two-step sign-in | [App password](app-passwords.md) | [App password](app-passwords.md) |

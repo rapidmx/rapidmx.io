@@ -188,3 +188,7 @@ Limitations in the current version:
 - **Mute**, **Mute new participants on join** and the talking stick rely on each participant's browser to obey
   them. **Remove**, the password and the waiting room are enforced by the server.
 - If the host leaves during talking-stick mode, nobody else can hand the stick on.
+
+## Protected meetings
+
+When your mailbox uses [zero-access encryption](encryption.md#zero-access-encryption), a new video meeting gets its own temporary key. The meeting's title and participant names are sealed. Each guest's join link carries the key after `#k=`, a part of the address that is never sent to the server, and the key expires an hour after the meeting's last occurrence. The event editor says when a meeting isn't end-to-end protected, and why.

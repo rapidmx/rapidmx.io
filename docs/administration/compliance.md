@@ -107,6 +107,8 @@ eDiscovery means finding and handing over the mail relevant to a case. In RapidM
 
 Both are covered in [Key escrow](key-escrow.md#search-and-export-a-matter). Every search, export and download is audited.
 
+For a mailbox protected by [zero-access encryption](encryption-and-certificates.md#zero-access-encryption), a search reaches only sender, recipient, date and folder, and an export holds its contents in encrypted form. They can be produced in readable form only through an escrow scope that covers the mailbox, so if you have disclosure obligations, set up escrow before people start using the server, or turn zero-access off.
+
 ## Data requests
 
 **Data Requests** lists every export, import and erasure request across every mailbox, newest first. People make the same requests for their own mailbox under **Settings → Privacy & Data** in the mail app (see [Import and export](../user-guide/import-export.md)); this page is where you handle them, or make them on someone's behalf.

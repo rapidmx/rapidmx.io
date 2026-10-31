@@ -20,6 +20,8 @@ Most mail programs and providers can export a mailbox as an **mbox** file, and O
 4. Click **Upload Mbox or PST file** and choose the file.
 5. The import runs in the background. Come back to this page to see how many messages were imported and how many failed.
 
+If your mail is protected by [zero-access encryption](encryption.md#zero-access-encryption), this page doesn't offer an import and explains why: the uploaded archive would wait on the server in readable form.
+
 Files up to 50 GB can be imported (your administrator can change the limit), and you can start up to 10 imports an hour. Every message goes into the folder you chose.
 
 ## Download a copy of your data

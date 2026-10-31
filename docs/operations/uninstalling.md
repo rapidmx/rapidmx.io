@@ -32,6 +32,18 @@ The installer records what it installed, and removes only that:
 - It removes its nginx configuration and restores the `http` server blocks it had commented out, removes nginx if it
   installed it, and removes the firewall rules it added.
 
+If the install publishes [DNS records automatically](../administration/dns-publishing.md), it also deletes the records
+the DNS controller published and waits up to ten minutes for them to leave DNS. A record that was at the provider before
+RapidMX and was left alone stays. `--keep-dns` leaves every record in DNS instead.
+
+:::warning Before you run it
+- **Domains managing their root TXT records.** While RapidMX manages a domain's [root TXT records](../administration/dns-publishing.md#spf-and-the-root-txt-records),
+  the script stops with nothing removed and names the domain. Choose **Stop managing** on the domain's page first, which
+  puts its SPF record and kept values back, then run it again. `--keep-dns` skips this check.
+- **The configuration keyring.** A k3s cluster the script installed is removed whole, [keyring](secrets-and-openbao.md#the-configuration-keyring)
+  included. Save it first if you are keeping the database. The script says whether the keyring is kept.
+:::
+
 The kubeconfig in `~/.kube/config` is left in place; delete it if it only held this cluster.
 
 ## Kubernetes (Helm)

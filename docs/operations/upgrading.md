@@ -47,7 +47,7 @@ checkout, with `docker compose -p rapidmx up -d --build`.
 Upgrade the Helm release:
 
 ```bash
-helm upgrade rapidmx oci://ghcr.io/rapidmx/charts/server --version 1.0.0-beta.43 --namespace rapidmx \
+helm upgrade rapidmx oci://ghcr.io/rapidmx/charts/server --version 1.0.0-beta.47 --namespace rapidmx \
   --reset-then-reuse-values --wait --timeout 10m
 ```
 
@@ -64,20 +64,21 @@ nginx, the Gateway and the other pieces it installed:
 
 ```bash
 # Single server
-./single_node_install.sh --domain example.com --email you@example.com --version 1.0.0-beta.43
+./single_node_install.sh --domain example.com --email you@example.com --version 1.0.0-beta.47
 ```
 
 ```bash
 # AWS, in a Session Manager shell on the instance
 sudo -i
-export RAPIDMX_DOMAIN=example.com RAPIDMX_CHART_VERSION=1.0.0-beta.43
+export RAPIDMX_DOMAIN=example.com RAPIDMX_CHART_VERSION=1.0.0-beta.47
 curl -fsSL https://raw.githubusercontent.com/rapidmx/server/main/deploy/aws/bootstrap.sh -o /root/rapidmx-bootstrap.sh
 bash /root/rapidmx-bootstrap.sh
 ```
 
 Pass the same options and environment variables you installed with (for example `--mail-host`, or
 `RAPIDMX_HOSTED_ZONE_ID` and `RAPIDMX_SES_SMTP_USERNAME`), or they go back to their defaults. Both scripts keep the
-existing secrets.
+existing secrets. With [DNS publishing](../administration/dns-publishing.md), pass the same `--dns-*` options too: a
+run of the single-server script without `--dns-provider` turns publishing off.
 
 ## What happens during the upgrade
 
@@ -114,6 +115,32 @@ kubectl -n rapidmx get secret rapidmx-server-mail-ingest-secret -o jsonpath='{.d
 
 `--reset-then-reuse-values` passes them on for you. With OpenBao, upgrades don't need them at all.
 
+## Upgrading to beta.44 through beta.47
+
+These releases add zero-access encryption, OpenPGP, DNS publishing and DKIM rotation, and change how secrets are stored.
+Check each of these when you cross them:
+
+- **Update the plugins with the server (beta.45).** Update ActiveSync, MAPI, Booking pages and Video Conferencing together
+  with it, since their matching releases seal what they write for protected data and need `@rapidmx/restapi` 0.35.
+- **Zero-access encryption is on by default (beta.44).** A mailbox starts using it when its user next signs in to the web
+  app, and a background job then seals the mail it already had. Turning it off later never decrypts what is sealed. See
+  [Encryption and certificates](../administration/encryption-and-certificates.md) before you upgrade.
+- **The OpenPGP key host (beta.47).** `mail.wkd.openpgpkeyHost.enabled` defaults to `auto`: off unless the release comes
+  with a DNS provider that covers `global.domain`. See the [Helm chart reference](helm-chart.md#openpgp-key-host).
+- **Back up the configuration keyring (beta.47).** A production server refuses to start without
+  [the keyring](secrets-and-openbao.md#the-configuration-keyring). The chart generates it, but a render without cluster
+  access (`helm template`, Argo CD, Flux, `--dry-run`) now fails until you set `configEncryption.existingSecret`.
+- **Rollback limits (beta.47).** Plugin secret settings are encrypted on the first start of this release, once every server
+  pod runs it. An older server can't read them, so roll back only to a database backup that predates it.
+- **DKIM rotation is on (beta.47).** If you publish DNS by hand, expect new records to add. See
+  [Key rotation](mail-transport.md#key-rotation).
+- **OpenBao (beta.47).** A vault of your own must be `https://`. `openbao.pki.tokenSecret` is gone; use
+  [`openbao.auth`](secrets-and-openbao.md#the-encryption-certificate-authority). An install the installers set up moves
+  over when you re-run them.
+- **Existing domains stay manual (beta.47).** The chart's `mail.domains` list is adopted, not created, on an upgraded
+  deployment, and turning on DNS publishing doesn't change a domain that exists. Assign each domain to a provider in the
+  admin console.
+
 ## Upgrading the Meet plugin and the TURN server together
 
 The chart gives the Meet plugin two TURN addresses in one setting (`turn:` and `turns:`), which needs the plugin at
@@ -124,4 +151,5 @@ on. See [Video calls: the TURN relay](video-relay.md).
 
 Helm can roll back the release (`helm rollback rapidmx -n rapidmx`), but it can't undo a schema change the new version
 made. If the new version changed the schema in a way the old one can't read, restore the database backup you took
-first. See [Backup and restore](backup-and-restore.md).
+first. See [Backup and restore](backup-and-restore.md). Don't use `helm rollback --force`, which can write an older
+[configuration keyring](secrets-and-openbao.md#the-configuration-keyring) over a rotated one.

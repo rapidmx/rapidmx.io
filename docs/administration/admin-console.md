@@ -51,16 +51,18 @@ The sections are in the icon rail on the left (on a phone, in the menu behind th
 | Section | What it's for | Covered in |
 | --- | --- | --- |
 | **Mailboxes** | Create, review, share and delete mailboxes; erase what deleted mailboxes left behind | [Mailboxes](mailboxes.md) |
-| **Domains** | Add mail domains and check their DNS records | [Domains](domains.md) |
+| **Domains** | Add mail domains and check or publish their DNS records | [Domains](domains.md) |
 | **Audit Log** | Who did what, and when | [Quarantine and audit log](quarantine-and-audit-log.md) |
 | **Distribution Lists** | Group addresses that deliver to several people | [Groups and resources](groups-and-resources.md) |
 | **Transport Rules** | Organization-wide rules applied to mail as it arrives | [Compliance](compliance.md) |
 | **Escrow Scopes** | Who can jointly recover encrypted mail | [Key escrow](key-escrow.md) |
-| **Encryption Policy** | When end-to-end encryption is used | [Encryption and certificates](encryption-and-certificates.md) |
+| **Encryption Policy** | When end-to-end encryption is used, and whether zero-access encryption and OpenPGP are allowed | [Encryption and certificates](encryption-and-certificates.md) |
 | **Mailbox Policy** | Default quotas, and whether people can create their own mailbox | [Mailboxes](mailboxes.md#mailbox-policy) |
 | **Retention Policy** | How long mail and audit-log entries are kept | [Compliance](compliance.md#retention-policy) |
 | **Data Requests** | Mailbox exports, imports and erasure requests | [Compliance](compliance.md#data-requests) |
 | **Signing Certificates** | Pending requests for S/MIME signing certificates | [Encryption and certificates](encryption-and-certificates.md#signing-certificates) |
+| **Integrations** | DNS providers, Giphy, STUN servers, the S/MIME signing CA, the DNS resolver and the plugin registry, applied without a restart | [Automatic DNS](dns-publishing.md) |
+| **Configuration Encryption** | The key that encrypts secrets saved in this console, and rotating it | [Secrets and OpenBao](../operations/secrets-and-openbao.md) |
 | **Plugins** | Install, configure, upgrade and remove plugins | [Plugins](plugins.md) |
 | **Diagnostics** | Versions, resource usage and live logs | [Monitoring](../operations/monitoring.md) |
 | **Branding** | Logo, product name, stylesheet, header and footer | [Branding](branding.md) |

@@ -101,6 +101,25 @@ For each mailbox:
 
 Each delivered copy is also appended to the mail event stream as `message.delivered`, which plugins can consume.
 
+### Zero-access delivery
+
+The steps above are how a mailbox without [zero-access encryption](encryption.md#zero-access-encryption) works. A
+zero-access recipient can't use the queue, because the queue spools the raw message to the blob store, and a readable
+spool would defeat the whole property. So `deliver()` runs that recipient's entry **inside the ingest request**
+(`ScanQueueJob.processInline()`), from the raw message in memory, before it answers the MTA:
+
+1. Scanning and the user's filter rules run as usual, on the plaintext the request is holding.
+2. The server builds the sealed [search index entry](search.md#sealed-index-segments).
+3. It seals the full MIME, the subject and preview, and any invitation filed to a protected calendar.
+4. It stores those and discards the plaintext.
+
+A transient failure answers the MTA with a `503`,
+so the MTA retries from its own queue and the server never parks plaintext to retry later. A bridge that stages inbound
+mail must delete the staged copy once the server accepts it, which is why ses-bridge removes its S3 copy.
+
+Derived data carries envelope fields only: push payloads and the event stream, where a zero-access copy's
+`message.delivered` is marked `zeroAccess: true` and has no subject and no parsed delivery report.
+
 ### Trusting Authentication-Results
 
 Several decisions depend on whether the sender's DKIM signature verified: members-only distribution lists, the
@@ -121,6 +140,12 @@ for it to `mail:dkim:key_dir` (`<domain>.<selector>.key`, selector `mail` by def
 domain for the DNS checklist. With the Helm chart that directory is a volume shared with postfix-bridge, which copies new
 keys into OpenDKIM and signs outbound mail with them. With SES, SES's own DKIM signs instead.
 
+`DkimRotationJob` (hourly) rotates the keys the server made itself, per domain. It mints a selector `rmx<yyyymmdd>` and
+publishes the new record through the domain's DNS provider, or shows it on the checklist for manual domains. Signing
+switches only after the record has been live for `mail:dkim:rotation:publish_grace_hours` (48) and the MTA has
+acknowledged the switch, and the old record and key go after `overlap_days` (7). It is on by default and needs
+postfix-bridge 1.6.0 or later, which has per-domain selectors. Keys imported by hand and SES deployments are never rotated.
+
 ## Outbound
 
 ### Sending
@@ -134,7 +159,12 @@ same for the web app, ActiveSync and MAPI:
    never sent unscanned.
 3. Hand it to the configured `MailTransport`. If no recipient is accepted, the send fails with a 502 that lists why.
 4. File the message in Sent Items, and publish `message.sent` (and `send.failed` for refused recipients) to the mail
-   event stream.
+   event stream. For a zero-access mailbox, the Sent Items copy is sealed (`ZeroAccessWriter`).
+
+An end-to-end encrypted message to recipients who need both formats goes out as one copy per format, each restricted by
+`Message.envelopeRecipients`. See [Encryption](encryption.md#openpgp). In a zero-access mailbox the server can't read a
+stored draft, so the client assembles the MIME and supplies the plaintext again at send time, and the message stays
+readable in the Outbox only until it is relayed.
 
 The route is rate-limited per user. Mail the server generates itself (out-of-office replies, list relays, notices)
 goes to the transport directly.
@@ -179,9 +209,10 @@ the ingest path, and refuses external recipients. That lets you test sending wit
 | Ingest endpoints, resolution, delivery | `@rapidmx/restapi` `src/routes/BaseMailIngestRoute.ts` |
 | Ingest guard | server `src/lib/InternalCallerGuard.ts` |
 | Scanning and verdicts | `@rapidmx/restapi` `src/scan/ScanPipeline.ts`, `src/jobs/ScanQueueJob.ts` |
+| Zero-access filing | `@rapidmx/restapi` `src/zeroaccess/` |
 | Send path | `@rapidmx/restapi` `src/util/MailSendUtils.ts`, `src/routes/BaseMessageRoute.ts` |
 | Background and scheduled send | `@rapidmx/restapi` `src/jobs/ScheduledSendJob.ts` |
 | Transports | `@rapidmx/restapi` `src/transport/` |
 | Mail event stream | `@rapidmx/restapi` `src/events/MailEventStream.ts` |
-| DKIM keys | `@rapidmx/restapi` `src/dkim/FsDkimKeyProvider.ts` |
+| DKIM keys and rotation | `@rapidmx/restapi` `src/dkim/FsDkimKeyProvider.ts`, `src/jobs/DkimRotationJob.ts` |
 | Development shortcuts | server `src/dev/` |

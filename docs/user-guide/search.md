@@ -42,16 +42,16 @@ More tips:
 
 ## Encrypted mail and the local index
 
-The server can't read encrypted messages, so it can't search them. RapidMX handles them on your device instead:
+The server can't read end-to-end encrypted messages or mail protected by [zero-access encryption](encryption.md#zero-access-encryption), so it can only search them by sender, recipient, date and folder. RapidMX handles their contents on your device instead:
 
 - **Unlock your keys** to include encrypted mail. Until then, a link above the results says "Unlock to include encrypted messages in these results".
-- **The local index.** Once your keys are unlocked, your browser builds an encrypted search index of your recent mail on your device in the background. Searches of recent encrypted mail are then instant. The line above the results says how far back it reaches, for example "Local search covers messages back to" a date, and "(still building)" while it is being built.
+- **The local index.** Once your keys are unlocked, your browser builds an encrypted search index of your recent mail on your device in the background, from sealed index data the server keeps for your mailbox. Searches of recent encrypted mail are then instant. The line above the results says how far back it reaches, for example "Local search covers messages back to" a date, and "(still building)" while it is being built.
 - **Older encrypted mail** is still searched, more slowly: click **Search all mail** above the results.
 - **The index is removed** when your keys lock, when you sign out, or after the encryption **Session timeout**. It is rebuilt the next time you unlock.
 
 To choose how much space the index may use on this device, open **Settings** > **Encryption** > **Local search index size**: from **100 MB** to **10 GB**, or **Unlimited (disk space only)**. The default is 500 MB in a browser. A new size applies the next time the index is rebuilt.
 
-In a mailbox that is shared with you, encrypted messages can only be unlocked by the mailbox's owner, so they aren't included in your results.
+In a mailbox that is shared with you, mail protected by zero-access encryption opens once a mailbox of your own is unlocked. Messages encrypted end to end to the mailbox's owner can only be unlocked by that owner, so they aren't included in your results.
 
 ## Search your calendar and contacts
 

@@ -1,15 +1,17 @@
 ---
 title: Search
 sidebar_position: 6
-description: How RapidMX searches mail it can read on the server and mail only the user can read in the browser, how attachment text is extracted, and how the results are merged.
+description: How RapidMX searches mail it can read on the server and mail only the user can read on the device, how sealed index segments feed a zero-access mailbox's local index, how attachment text is extracted, and how the results are merged.
 ---
 
 # Search
 
-End-to-end encryption makes search harder. The server can index ordinary mail, including the text of attachments, but
-it can't read an encrypted message, so it can't find one by its content. RapidMX therefore searches in tiers: the
-server searches what it can read, the browser keeps an encrypted index of the encrypted mail it has opened, and the web
-client merges the two into one list of results. This page explains each tier and where its code lives.
+Encryption makes search harder. The server can index ordinary mail, including the text of attachments, but it can't find
+an encrypted message by its content. RapidMX therefore searches in tiers: the server searches what it can read, the
+device keeps an encrypted index of what only the user can read, and the web client merges the two into one list of
+results. Zero-access mail adds a twist: the server does hold the plaintext during delivery, so it builds a sealed index
+entry at that moment and the device imports it, instead of having to decrypt every message. This page explains each tier
+and where its code lives. The design is `specs/search.md` in `@rapidmx/restapi`.
 
 The user's view is in [Search](/docs/user-guide/search).
 
@@ -41,6 +43,10 @@ also has entity types for contacts, events, notes and tasks. Deleting or erasing
 An encrypted message is indexed **metadata only**: participants, date, folder and flags, but no body and no attachment
 text, and with header protection the subject is the placeholder `[...]`. Its result carries `metadataOnly: true`.
 
+A zero-access mailbox's mail is indexed the same way, including any message still readable in that mailbox, such as a
+draft waiting in the Outbox. That metadata document replaces any readable one left from before the mailbox turned
+zero-access, and is retried until it does.
+
 ### The route
 
 `GET /api/mail/search` (`BaseSearchRoute`) takes `q` (free text) and filters (`from`, `to`, `cc`, `subject`,
@@ -66,7 +72,10 @@ and the next indexing pass includes it in the message's document. Extractors liv
 | PDF | `PdfTextExtractor` (`pdf-parse`, an optional peer dependency) |
 | Word (`.docx`) | `DocxTextExtractor` (`mammoth`, an optional peer dependency) |
 
-Spreadsheets and presentations are out of scope. Attachments of encrypted messages are skipped.
+Spreadsheets and presentations are out of scope. Attachments of encrypted messages are skipped. For zero-access mail,
+attachment text goes into the sealed index entry during delivery, within `mail:zero_access:extraction_budget_ms` and
+`extraction_max_bytes`. A sealed draft's attachments are put off (`mail:jobs:attachment_extraction:zero_access_defer_seconds`),
+and sealing drops their extracted text.
 
 Attachments are untrusted input, so extraction is fenced in: it runs in a worker thread with its own memory limits
 (`mail:search:extraction:isolation`, `worker`), and `mail:search:extraction:*` caps the input size (25 MB), the time
@@ -80,7 +89,7 @@ in `apps/shared/search/` in the web client.
 
 - **What it indexes.** Encrypted messages only (the ones whose subject is the `[...]` placeholder), newest first,
   starting with the Inbox and Sent Items, within the last 12 months and a size budget the user can set (500 MB by
-  default on the web).
+  default on the web). In a zero-access mailbox it also imports the server's sealed index (next section).
 - **Storage.** SQLite compiled to WebAssembly (`wa-sqlite`, its asynchronous build) in a Web Worker, on the Origin Private
   File System (OPFS), one database per mailbox. Full-text search uses FTS5 with BM25 ranking, weighted like the server's
   (subject highest).
@@ -91,6 +100,29 @@ in `apps/shared/search/` in the web client.
 - **Lifecycle.** The build starts when the mailbox is unlocked and is incremental, skipping messages already indexed
   unchanged. Locking, the idle timeout and signing out destroy the index; sign-out deletes every index in every open tab.
   Indexes for mailboxes the user lost access to are removed. Only one tab holds a mailbox's index at a time.
+
+## Sealed index segments
+
+A zero-access mailbox can't be searched by content on the server, and decrypting a whole mailbox on every device would be
+far too slow. So the server writes one sealed **index entry** per message during delivery, holding the subject, body text,
+attachment text and envelope fields, encrypted to the mailbox's zero-access key. Those entries are opaque to the server
+afterwards. The trust this adds must be stated rather than assumed: the server is trusted to index honestly, and a client
+can't verify a segment short of decrypting everything. A deployment that can't accept that turns zero-access off.
+
+`BaseZeroAccessIndexRoute`, at `/api/mail/mailboxes/:id/search-index`, serves a manifest, the pending entries (the "live
+tail") and per-week segments. It also takes compacted segments back from clients, with a generation check. A segment is a
+sealed, gzipped JSON bundle.
+
+- **Sync.** The client imports segments and the live tail a page at a time, and resumes where an interrupted pass stopped
+  (`zeroAccessIndexSync.ts`).
+- **Compaction.** Clients fold closed weeks into segments, staggered by platform using the manifest's `compactableAt` and
+  `pendingBytes`: a desktop at once, a browser after 6 hours, a phone after a day, and a phone declines large weeks and
+  cellular connections. A week this device can't fold is skipped so it doesn't take every compaction slot.
+- **End-to-end mail.** Only a client can read it, so the client that decrypts it uploads the text as client segments
+  (`origin: "client"`) sealed to the zero-access key. It is decrypted once per mailbox, not once per device.
+
+Outlook and ActiveSync clients hold no segment cache, so **encrypted content isn't searchable from them**. Envelope search
+still works.
 
 ## Tier 3: decrypt to check
 
@@ -125,4 +157,5 @@ building the index doesn't work end to end. The code is in `src-tauri/src/search
 | Attachment extraction | `@rapidmx/restapi` `src/search/extraction/`, `src/jobs/AttachmentExtractionJob.ts` |
 | Query parsing, Tier 3, merging | web-client `lib/search/`, `apps/shared/search/crossMailboxSearch.ts` |
 | Browser index | web-client `apps/shared/search/` (`localIndexWorker.ts`, `localIndexVFS.ts`, `localIndexBuilder.ts`) |
+| Sealed index | `@rapidmx/restapi` `src/zeroaccess/ZeroAccessIndexing.ts`, `ZeroAccessIndexStore.ts`; web-client `apps/shared/search/zeroAccessIndexSync.ts` |
 | Native index | tauri-client `src-tauri/src/search/` |

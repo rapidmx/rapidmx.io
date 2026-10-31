@@ -87,11 +87,33 @@ Don't add a path that lets a trusted role act as an escrow holder or that skips 
 
 ### Encryption keys stay with their owners
 
-S/MIME signing and encryption happen in the browser. Each user's private keys sit in a key vault that is unlocked by
+End-to-end signing and encryption, with S/MIME or OpenPGP, happen in the browser. Each user's private keys sit in a key vault that is unlocked by
 their encryption password, a recovery code or a passkey, and the wrapping happens on the client. The server stores
 wrapped keys and public certificates; it signs certificate requests but doesn't see private keys. With OpenBao's PKI,
 the certificate authority's own key never leaves the vault either. A change must not send an unwrapped private key or
 a password-derived key to the server.
+
+### Zero-access storage never keeps plaintext
+
+For a mailbox using [zero-access encryption](./internals/encryption.md#zero-access-encryption), the server may see
+plaintext inside a request but must not persist it. Any new path that files a mailbox's content, or anything derived from
+it, goes through `ZeroAccessWriter` or `ZeroAccessRecordSealer`. Don't spool it to the blob store to process later, write
+it to a log or an audit entry, put it in a push payload or event, or leave it in the search index.
+
+Only the mailbox's owner can change their own zero-access settings. An administrator's one lever is the server-wide
+switch, which is visible to every user. Describe the guarantee accurately too: zero-access protects data at rest and is
+not end-to-end encryption, because the server sees the plaintext while delivering it.
+
+### Configuration secrets are encrypted, and only one small component writes to Kubernetes
+
+Secrets saved in the admin console are stored as envelopes bound to their record and field, so a database dump alone reveals
+none of them. The key is the configuration keyring, mounted read-only by the server pods. A secret the server can't decrypt
+is answered as `{ "secret": true, "unreadable": true }`, never decrypted for a request, and audit entries record which keys
+changed, never a value.
+
+The server creates no DNS objects in Kubernetes. dns-controller does, with a namespaced `Role`. It has no database, Redis or
+keyring access, and nothing calls it. Don't give the server those rights to save a step, and don't add an inbound listener
+to the controller.
 
 ### Untrusted content stays contained
 

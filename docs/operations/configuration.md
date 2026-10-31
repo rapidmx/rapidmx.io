@@ -54,7 +54,8 @@ or an IAM role for AWS services) rather than in `service.config`.
 A plugin's saved settings can never set the server's own configuration. These keys, and everything under them, are
 protected: `trusted_roles`, `trusted_proxies`, `auth`, `cookie_secret`, `cookies`, `session`, `cors`, `ssl`,
 `datastores`, `base_path`, `rateLimit`, `telemetry_services`, `service_name`, `version`, `max_body_size`, `shutdown`,
-`system`, `metrics`, `diagnostics`, `class_loader`, `cluster_url`, `react`, `static_assets`, `giphy`, `logs`,
+`system`, `metrics`, `diagnostics`, `class_loader`, `cluster_url`, `react`, `static_assets`, `giphy`, `integrations`,
+`config_encryption`, `logs`, `mail:zero_access`,
 `mail:transport`, `mail:internal`, `mail:escrow`, `mail:pki`, `mail:auth_server_url`, `mail:basic_auth`,
 `mail:security`, `mail:blob`, `mail:scan`, `mail:dns`, `mail:dkim`, `mail:domains`, `mail:auto_provision`,
 `mail:default_quota_bytes`, `mail:compose`, `mail:search`, `mail:preferences`, `mail:branding`, and the schedules of
@@ -71,7 +72,8 @@ still its publicly known development default:
 | `auth:secret` | `auth__secret` |
 | `mail:transport:ingest:secret` | `mail__transport__ingest__secret` |
 
-`NODE_ENV=test` does **not** skip this check. The server also logs an error at startup when
+`NODE_ENV=test` does **not** skip this check. A production server also refuses to start without a
+[configuration keyring](secrets-and-openbao.md#the-configuration-keyring). The server also logs an error at startup when
 `mail:escrow:audit_hmac_key` is empty, or when the ingest secret is shorter than 16 characters, and a warning when
 `mail:security:trusted_authserv_id` is empty.
 
@@ -107,7 +109,9 @@ secrets withheld. See [Monitoring](monitoring.md).
 | `logger:level` | `info` in production, `debug` otherwise | Log level |
 | `logger:file` | unset | A file to log to |
 | `metrics:authRequired` | `true` | Require a trusted role for `/api/metrics` |
+| `giphy:enabled` | `true` | Offer GIF search. **Integrations** in the admin console can override it. |
 | `giphy:api_key` | placeholder | Giphy API key for GIF search. The placeholder leaves GIF search off. |
+| `integrations:stun:urls` | unset | JSON list of `stun:` and `stuns:` URIs for the Video Conferencing plugin |
 | `shutdown:drain_delay_ms` | `5000` | On `SIGTERM`, how long `/api/status` answers `503` before the server stops |
 | `shutdown:timeout_ms` | `25000` | How long stopping may take before the process exits anyway |
 | `telemetry_services:token_roles` | `["telemetry"]` | Roles of the token telemetry events are sent with |
@@ -193,6 +197,59 @@ On MongoDB the datastores are `acl` and `mongo`; on PostgreSQL they are `acl` an
 | `mail:jobs:acme_enrollment_driver:expiry_warning_days` | `30` | Warn about signing certificates expiring within this many days |
 | `mail:jobs:acme_enrollment_driver:failure_audit_after` | `3` | Failed CA checks in a row before an audit log entry |
 
+### Zero-access encryption
+
+`allowed` is only the default of **Allow zero-access encryption**. A value saved in the admin console wins.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `mail:zero_access:allowed` | `true` | Whether mailboxes may store mail encrypted at rest |
+| `mail:zero_access:extraction_budget_ms` | `5000` | Total time for indexing a message's attachments during delivery. What doesn't fit is left for the user's app. |
+| `mail:zero_access:extraction_max_bytes` | `10485760` (10 MiB) | Largest attachment indexed during delivery |
+| `mail:zero_access:compaction_grace_hours` | `24` | How long after a week ends its search entries may be compacted |
+| `mail:zero_access:max_segment_bytes` | `67108864` (64 MiB) | Largest search segment a client may upload |
+| `mail:jobs:zero_access_backfill:schedule` | `0 * * * * *` | How often existing data is sealed |
+| `mail:jobs:zero_access_backfill:batch_size` | `100` | Messages sealed per run across all mailboxes |
+| `mail:jobs:zero_access_backfill:deleted_scheduled_send_days` | `30` | Days a deleted scheduled message stays readable, so restoring it still sends it |
+| `mail:encryption:openpgp_allowed` | `true` | Default of **Allow OpenPGP**. A value saved in the admin console wins. |
+
+### Domains and DNS publishing
+
+The chart sets most of these from its `dns.*` and `mail.domains` values. See
+[DNS publishing](helm-chart.md#dns-publishing).
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `mail:domains` | `[]` | Domains created at start: names, objects of `name`, `dnsProvider`, `dmarcPolicy`, `dmarcReportEmail` and `aliasOf`, or a comma-separated string |
+| `mail:domain_verification:accept_legacy_apex` | `true` | Also verify a new domain by the old ownership record at its root, besides `_rapidmx-verify.<domain>` |
+| `mail:dns:controller:subject` | `""` | The ServiceAccount the DNS controller calls `/internal/dns` as. Empty refuses every call. |
+| `mail:dns:desired_state:long_poll_seconds` | `55` | How long the controller's long poll is held |
+| `mail:dns:publish:ttl` | `300` | TTL of published records |
+| `mail:dns:publish:addresses` | `[]` | Addresses of the hosts' A/AAAA records |
+| `mail:dns:publish:hosts` | `[]` | The deployment's own hosts to publish |
+| `mail:dns:publish:external_dns_image` | external-dns v0.23.0, by digest | The image the controller runs |
+| `mail:dns:takeover:min_interval_seconds` | `60` | Shortest time between automatic takeover passes |
+| `mail:dns:takeover:recheck_seconds` | `21600` | How long a name with nothing to take over isn't looked at again |
+| `mail:dns:bootstrap_provider` | `""` | JSON of the provider config the installer asked for |
+| `mail:dns:bootstrap_credentials_dir` | `/etc/rapidmx/dns-bootstrap` | Where its credentials Secret is mounted |
+
+### Configuration encryption
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `config_encryption:keyring_file` | `""` | File holding the keyring. The chart sets `/etc/rapidmx/config-keyring/keyring.json`. Wins over `keyring`. |
+| `config_encryption:keyring` | `""` | The keyring as JSON, for development and tests |
+| `config_encryption:keyring_store:backend` | `none` | Where a rotation writes: `kubernetes`, `openbao`, `file` or `none` (rotation refused). The chart sets it. |
+| `config_encryption:keyring_store:secret_name` | `""` | The Secret, with `kubernetes` |
+| `config_encryption:keyring_store:kv_mount` | `secret` | The KV v2 mount, with `openbao` |
+| `config_encryption:keyring_store:kv_path` | `""` | The KV path, with `openbao` |
+| `config_encryption:activation:heartbeat_seconds` | `30` | How often each server copy reports the keys it has loaded |
+| `config_encryption:activation:warn_minutes` | `15` | When the console warns that a new key hasn't reached every copy |
+| `config_encryption:rotation:schedule` | `*/30 * * * * *` | How often the rotation job looks for work |
+| `config_encryption:reencrypt:batch_size` | `100` | Rows re-encrypted per page |
+| `config_encryption:plugin_secrets:pod_selector` | `""` | Label selector of the server's pods. The chart sets it. |
+| `config_encryption:plugin_secrets:wait_for_rollout` | `true` | Wait for every server pod to run this release before encrypting plugin secrets |
+
 ### Message storage
 
 | Setting | Default | What it does |
@@ -217,7 +274,14 @@ On MongoDB the datastores are `acl` and `mongo`; on PostgreSQL they are `acl` an
 | `mail:transport:ingest:secret` | development default | The `/internal/mta` bearer secret. Required in production, 16 characters or more. |
 | `mail:transport:sendmail:path` | `/usr/sbin/sendmail` | The `sendmail` binary the Postfix transport runs |
 | `mail:dkim:key_dir` | `/var/lib/rspamd/dkim` | Where DKIM private keys are written |
-| `mail:dkim:selector` | `mail` | DKIM selector |
+| `mail:dkim:selector` | `mail` | DKIM selector, until a domain's first rotation |
+| `mail:dkim:rotation:enabled` | `true` | Start DKIM rotations on schedule. See [Key rotation](mail-transport.md#key-rotation). |
+| `mail:dkim:rotation:interval_days` | `180` | Days before the next rotation starts |
+| `mail:dkim:rotation:overlap_days` | `7` | Days the old record stays published after signing switches |
+| `mail:dkim:rotation:publish_grace_hours` | `48` | Hours the new record must be live before signing switches |
+| `mail:dkim:rotation:key_bits` | `2048` | RSA size of each new key, 2048 to 4096 |
+| `mail:dkim:rotation:max_starts_per_run` | `10` | Rotations started per run and server copy |
+| `mail:jobs:dkim_rotation:schedule` | `0 0 * * * *` | How often the rotation job runs |
 | `mail:dns:mx_hostname` | unset | The MX host name in the DNS checklist. The chart and Compose set it. |
 | `mail:dns:resolver` | `node` | `node`, or `doh-dnssec` to validate DNSSEC through a DNS-over-HTTPS resolver |
 | `mail:dns:doh:endpoint` | `https://cloudflare-dns.com/dns-query` | The DoH resolver |
@@ -248,7 +312,12 @@ On MongoDB the datastores are `acl` and `mongo`; on PostgreSQL they are `acl` an
 | `mail:pki:openbao:address` | `http://127.0.0.1:8200` | OpenBao address |
 | `mail:pki:openbao:mount` | `pki` | PKI mount |
 | `mail:pki:openbao:role` | `rapidmx` | Issuing role |
-| `mail:pki:openbao:token` | `""` | Token that may sign and revoke |
+| `mail:pki:openbao:token` | `""` | Token that may sign and revoke, with the `token` method |
+| `mail:pki:openbao:ca_file` | `""` | PEM bundle to verify OpenBao's listener with. Empty: the system's trust store. |
+| `mail:pki:openbao:auth:method` | `token` | `token`, or `kubernetes` to log in with the pod's ServiceAccount token |
+| `mail:pki:openbao:auth:role` | `""` | OpenBao role, with `kubernetes` |
+| `mail:pki:openbao:auth:mount_path` | `kubernetes` | Kubernetes auth mount |
+| `mail:pki:openbao:auth:token_file` | `/var/run/secrets/openbao/token` | The projected ServiceAccount token |
 | `mail:pki:openbao:timeout_ms` | `5000` | Request timeout |
 | `mail:pki:openbao:serial_map_path` | `/var/lib/rapidmx/pki/openbao-serials.json` | Serial number map |
 | `mail:pki:signing_enrollment:backend` | `manual` | Signing certificates: `manual` or `rfc8823`. The chart's `auto` picks one. |

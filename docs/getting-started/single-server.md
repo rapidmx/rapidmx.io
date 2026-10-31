@@ -17,7 +17,8 @@ Use it for a rented VPS, a dedicated server or a machine in your office. If you 
 ## What you need
 
 - A Debian, Ubuntu or RHEL-family Linux server with `sudo` and about 8 GiB of memory
-- The DNS records from [Before you deploy](before-you-deploy.md), and ports `25`, `80` and `443` open
+- The DNS records from [Before you deploy](before-you-deploy.md), or a supported DNS provider so that the script
+  [publishes them for you](#publish-dns-records-automatically), and ports `25`, `80` and `443` open
 - No Docker running on the same server. It conflicts with k3s, and the script stops if it finds it.
 
 ## What the script installs
@@ -97,7 +98,14 @@ only that.
 | `--gateway shared` / `--gateway chart` | `shared` (the default): one Gateway made by the script, which the release's routes attach to. `chart`: the chart makes a Gateway for each of its hosts. |
 | `--version <version>` | Install a specific release (default: the release the script was published with) |
 | `--skip-k3s` | Use the cluster `kubectl` already reaches instead of installing k3s |
+| `--dns-provider <type>` | [Publish DNS records](#publish-dns-records-automatically) through `cloudflare`, `route53`, `rfc2136`, `google` or `azure` |
+| `--dns-zone <zone>` | The DNS zone, when `--domain` is below the zone's apex |
+| `--dns-credentials-file <file>` | A file of `NAME=value` lines with the provider's credentials |
+| `--dns-takeover` | Let the provider replace records that already exist at the names it publishes |
+| `--public-address <ip>` | The address to publish for the mail host, replacing the detected one. Repeat it for several. |
+| `--openpgpkey-host true\|false\|auto` | Serve `openpgpkey.<domain>`, the OpenPGP Web Key Directory host. `auto` (the default) serves it once its record resolves to the server. |
 | `--uninstall --yes` | Remove what the script installed, including the mail data. `--uninstall` alone removes nothing. See [Uninstalling](../operations/uninstalling.md). |
+| `--keep-dns` | With `--uninstall`, leave every published record in DNS |
 | `--help` | List everything |
 
 Some environment variables change what the script installs:
@@ -108,18 +116,69 @@ Some environment variables change what the script installs:
 | `OPENBAO_ADDRESS` | An OpenBao this cluster already runs, used instead of installing one |
 | `OPENBAO_VERSION`, `EXTERNAL_SECRETS_VERSION` | The OpenBao chart and External Secrets release to install |
 | `K3S_VERSION`, `CERT_MANAGER_VERSION`, `ENVOY_GATEWAY_VERSION` | The pinned releases of those components (defaults `v1.36.5+k3s1`, `v1.21.2` and `v1.9.1`) |
+| `DNS_PROVIDER` | The default of `--dns-provider` |
+| `OPENPGPKEY_HOST` | The default of `--openpgpkey-host` |
+| `DNS_CONTROLLER_TAG`, `DNS_CONTROLLER_DIGEST` | Deploy another DNS controller than the release the chart pins |
+| `DNS_CLEANUP_WAIT_SECONDS` | How long `--uninstall` waits for published records to leave DNS (default `600`) |
+
+## Publish DNS records automatically
+
+With `--dns-provider`, the script publishes the DNS records for you, so there is nothing to add at your DNS host. Your
+domain's zone must already be at that provider. [DNS publishing](../administration/dns-publishing.md) explains what is
+published and how it behaves afterwards.
+
+```bash
+./single_node_install.sh --domain example.com --email you@example.com \
+  --dns-provider cloudflare --dns-credentials-file ./dns.env
+```
+
+Here `dns.env` holds the line `CF_API_TOKEN=<your token>`. Keep it readable only by you. The script reads it as text and
+never runs it. You can use the provider's environment variables instead (`sudo` drops them unless you run `sudo -E`).
+A credential is never a command-line option.
+
+| `--dns-provider` | Credentials and settings |
+| --- | --- |
+| `cloudflare` | `CF_API_TOKEN`: a token with Zone:Zone:Read and Zone:DNS:Edit on the zone. If it is restricted by client IP, list every address the server goes out from, IPv4 and IPv6. |
+| `route53` | `AWS_REGION` (required), `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (both or neither: with neither, external-dns's IAM role), `EXTERNAL_DNS_AWS_ZONE_TYPE`, `EXTERNAL_DNS_AWS_ASSUME_ROLE` |
+| `rfc2136` | `EXTERNAL_DNS_RFC2136_HOST` (required), `EXTERNAL_DNS_RFC2136_PORT`, `EXTERNAL_DNS_RFC2136_ZONE`, `EXTERNAL_DNS_RFC2136_TSIG_KEYNAME`, `EXTERNAL_DNS_RFC2136_TSIG_SECRET`, `EXTERNAL_DNS_RFC2136_TSIG_SECRET_ALG`, `EXTERNAL_DNS_RFC2136_INSECURE`. It can't hold MX, SRV, SPF, DKIM or DMARC records, so those stay manual. |
+| `google` | `GOOGLE_APPLICATION_CREDENTIALS` (the path of a service account's key file) and `EXTERNAL_DNS_GOOGLE_PROJECT` |
+| `azure` | `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` and `AZURE_RESOURCE_GROUP` |
+
+Only Cloudflare has been tested live so far. The other four are not yet live-tested.
+
+Every option is checked before anything is installed. The final message lists what is published, what stays manual and
+why, and any conflicts. Keep these in mind:
+
+- **The mail host's address.** It is published at the machine's global IPv4 addresses, or else the IPv4 address it is
+  seen from outside. IPv6 is published only for an address you give with `--public-address`.
+- **Existing records.** A record already at a name RapidMX publishes, such as your previous mail provider's MX, is left
+  alone and shown as a conflict until you take it over in the admin console. `--dns-takeover` allows that for the whole
+  provider from the start.
+- **SPF stays manual** until you opt the domain in, because it shares the domain's root TXT records with other services.
+- **Domains outside the zone stay manual.** So do a release's existing domains if you add `--dns-provider` later: assign
+  each to the provider in the admin console, then run the script again.
+- **Pass the same `--dns-*` options on every run that upgrades.** A run without `--dns-provider` turns publishing off.
+  After the first run, change the provider's credentials, zones and takeover setting in the admin console; a later run
+  doesn't apply them, and says so.
+- **Uninstalling.** `--uninstall --yes` deletes the records the DNS controller published, and waits for them to leave
+  DNS. A record that was at the provider before RapidMX and was left alone stays. While RapidMX manages a domain's root
+  TXT records, it stops with nothing removed and names the domain: opt the domain out in the admin console first.
+  `--keep-dns` leaves every record in DNS and skips that check.
 
 ## After the install
 
 - **Secrets.** With OpenBao (the default), the release's secrets live in the vault and upgrades don't need them. The
   vault's unseal key and root token are in the `openbao-keys` Secret in the `openbao` namespace. **Back that Secret
   up**: without it nothing in the vault can be recovered. See [Backup and restore](../operations/backup-and-restore.md).
+- **Configuration keyring.** It encrypts the credentials saved in the admin console, and a database backup is useless
+  without it. **Back it up with the database.** See
+  [The configuration keyring](../operations/secrets-and-openbao.md#the-configuration-keyring).
 - **Without OpenBao**, the script prints how to read `global.jwt.secret` and `global.mailIngestSecret` back from the
   cluster. You need them to run `helm upgrade` yourself. Re-running the script reuses them automatically.
 - **Re-running** the script is safe. It keeps every secret and re-checks nginx, the Gateway and the other pieces, which
   makes it a good way to [upgrade](../operations/upgrading.md): run it again with `--version`.
-- **More domains.** Add them in the admin console and publish the DNS records it shows. Postfix accepts, sends and
-  signs mail for them within seconds.
+- **More domains.** Add them in the admin console and assign them to a DNS provider, or publish the DNS records it
+  shows. Postfix accepts, sends and signs mail for them within seconds.
 
 ## Next steps
 

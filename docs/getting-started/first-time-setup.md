@@ -53,6 +53,10 @@ flowing. [Plugins](../administration/plugins.md) covers adding and removing them
 
 ## Step 2: Domain
 
+If you installed with a DNS provider, your domain is already listed under **Added from your installation**, and most of
+its records are being published for you. The **Published** column shows which, and what's left to add. See [Automatic
+DNS](../administration/dns-publishing.md). Otherwise:
+
 1. Type your mail domain, for example `example.com`, and click **Add domain**. RapidMX shows the DNS records the domain
    needs.
 2. Add each record at your DNS provider, exactly as shown. Use the **Copy** buttons: the DKIM key is long and easy to
@@ -66,7 +70,7 @@ The records look like this. Your ownership token and DKIM key are shown in the c
 
 | Type | Name | Value |
 | --- | --- | --- |
-| `TXT` | `example.com` | `rapidmx-domain-verification=<token>` |
+| `TXT` | `_rapidmx-verify.example.com` | `rapidmx-domain-verification=<token>` |
 | `MX` | `example.com` | `10 mail.example.com` |
 | `TXT` | `example.com` | `v=spf1 mx ~all` |
 | `TXT` | `mail._domainkey.example.com` | `v=DKIM1; k=rsa; p=<public key>` |
@@ -74,7 +78,8 @@ The records look like this. Your ownership token and DKIM key are shown in the c
 
 The checklist can also list an **Autodiscover (CNAME)** and an **Autodiscover (SRV)** record, which let phones and
 Outlook find the server from just an e-mail address. You need only one of the two. See [Automatic
-setup](../clients/automatic-setup.md).
+setup](../clients/automatic-setup.md). An **OpenPGP keys (CNAME)** record lets Proton Mail and other OpenPGP apps find
+your users' keys. See [OpenPGP](../administration/encryption-and-certificates.md#openpgp).
 
 :::warning
 Until the ownership record is found, the domain can't send or receive mail.
@@ -92,7 +97,8 @@ name. [Domains](../administration/domains.md) explains each record in more detai
 
 Three groups of server-wide rules. Every default is safe, so you can click **Continue** and come back later:
 
-- **Encryption policy:** the rules for end-to-end encryption, such as whether it is automatic.
+- **Encryption policy:** the rules for end-to-end encryption, such as whether it is automatic, and whether zero-access
+  encryption and OpenPGP are allowed. Both are on by default.
 - **Retention policy:** how long mail is kept.
 - **Mailbox policy:** the rules for new mailboxes, such as whether people can create their own.
 

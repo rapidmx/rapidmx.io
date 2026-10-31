@@ -43,6 +43,10 @@ balancer instead, or let the stack create them in a Route 53 hosted zone.
 The mail records for your domain (MX, SPF, DKIM, DMARC and an ownership record) come later. RapidMX generates them for
 you in the setup wizard, see [First-time setup](first-time-setup.md).
 
+If your DNS is at Cloudflare, Route 53, Google Cloud DNS or Azure DNS, or on a server that takes RFC 2136 updates, the
+single-server installer can publish all of these for you, including the two above. See [Automatic
+DNS](../administration/dns-publishing.md).
+
 :::tip Good to know
 Let's Encrypt limits how many certificates it issues for the same names each week. Avoid installing over and over
 against a real domain while you experiment. For a throwaway test, the single-server installer accepts a domain ending

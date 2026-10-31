@@ -108,7 +108,7 @@ const config: Config = {
       {
         name: 'keywords',
         content:
-          'self-hosted email, private email server, Google Workspace alternative, Microsoft 365 alternative, Exchange alternative, S/MIME, end-to-end encryption, calendar, ActiveSync, MAPI',
+          'self-hosted email, private email server, Google Workspace alternative, Microsoft 365 alternative, Exchange alternative, S/MIME, OpenPGP, end-to-end encryption, zero-access encryption, calendar, ActiveSync, MAPI',
       },
     ],
     colorMode: {

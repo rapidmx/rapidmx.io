@@ -56,6 +56,12 @@ Review (Sonnet) for security and performance topics.
   `chat-plugin`), say so plainly on the page.
 - **Never claim the RapidMX ACME CA (`acme.rapidmx.io`) is publicly trusted.** Its root is in no OS,
   browser or mail-client trust store.
+- **Zero-access encryption is never described as end-to-end encryption.** `restapi/specs/search.md` §3 requires the docs
+  to say plainly that the server sees plaintext during delivery, and which data stays readable. Don't write "only the user can
+  access" without those limits. It needs a key, so a mailbox isn't sealed until its user first signs in to the web app.
+- **Escrow is *available*, not a given** (same spec), and don't make compliance claims (SEC, FINRA, HIPAA, GDPR) without counsel.
+- **Automatic DNS isn't "fully managed".** Off by default in the chart, Kubernetes and the single-server installer only, and
+  PTR, SPF (until opt-in) and rfc2136's MX/SRV/TXT stay manual. Only Cloudflare is live-tested; the other four say so.
 - **There is no IMAP or POP3.** Clients connect through the web app, Exchange ActiveSync, MAPI over
   HTTP (Outlook) or the native app.
 - **Commit discipline.** Don't `git commit` unless explicitly asked for *that specific piece of
@@ -113,7 +119,7 @@ docs/user-guide/search.md
 docs/user-guide/calendar.md
 docs/user-guide/contacts.md
 docs/user-guide/tasks.md
-docs/user-guide/encryption.md                S/MIME, encryption password, recovery codes
+docs/user-guide/encryption.md                Zero-access, S/MIME, OpenPGP, encryption password, recovery codes, key export
 docs/user-guide/rules-and-automatic-replies.md
 docs/user-guide/shared-mailboxes.md          delegation, shared calendars
 docs/user-guide/settings.md                  signatures, appearance, notifications
@@ -125,6 +131,7 @@ docs/user-guide/chat.md                      chat-plugin
 docs/user-guide/crm.md                       crm-plugin
 docs/administration/admin-console.md
 docs/administration/domains.md
+docs/administration/dns-publishing.md        Automatic DNS: providers, what's published, conflicts, SPF opt-in
 docs/administration/mailboxes.md
 docs/administration/groups-and-resources.md  aliases, distribution lists, shared, room/resource
 docs/administration/users-and-sign-in.md     auth-server
@@ -192,7 +199,7 @@ Screenshots available under `static/img/screenshots/` (from `server/docs/images`
 - Landing-page claims deliberately toned down to match the code (verify before strengthening):
   Outlook for Windows (MAPI) is "in progress", since the last recorded status is a Connect/Bind loop;
   chat is "Coming soon" (chat-plugin is an empty skeleton); the encryption policy defaults to
-  `optional`, not automatic; vault unlock by passkey isn't wired into the UI; calendar share links
+  `optional`, not automatic (zero-access, a separate setting, defaults to on); vault unlock by passkey isn't wired into the UI; calendar share links
   have no UI; scanner outage = ClamAV quarantines, rspamd sends to Junk.
 - Screenshots in `static/img/screenshots` are stale: the wizard ones show Branding before Mailboxes
   (web-client 0.35 moved Branding last), `sign-in.png` shows RapidREST branding, and the inbox is
@@ -201,3 +208,13 @@ Screenshots available under `static/img/screenshots/` (from `server/docs/images`
   Helm values that do nothing, possible unauthenticated `/api/metrics` on Helm, AWS `gp3`/
   `trustedAuthservId` gaps, untested backup commands, no SECURITY.md in any repo...) were reported
   to the maintainer in the session summary; the docs follow the code where they disagree.
+
+### 2026-10-30 — Refresh for zero-access encryption, OpenPGP and Automatic DNS
+
+- Updated the landing page and docs for server beta.44 to beta.47, web-client 0.36 to 0.38, restapi 0.34 to 0.36. New page
+  `docs/administration/dns-publishing.md`. Ownership record moved to `_rapidmx-verify.<domain>`; DKIM rotation is on by default.
+- The brief described ZAE as encrypted in transit and at rest so only the user can access it, DNS as fully managed. The site
+  follows the source's narrower claims (see Standing decisions).
+- Unverified: that Outlook over MAPI can actually open zero-access mail with exported keys. The mapi release notes and the
+  settings copy say so, but nothing here tested it, and Outlook itself is still "in progress".
+- `setup-domain-dns.png` predates the Published column, the `_rapidmx-verify` name and the OpenPGP row: retake with the others.

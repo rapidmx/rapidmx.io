@@ -56,4 +56,6 @@ These are documented limits of the MAPI plugin. Use the web app for them.
 
 ## Encrypted mail
 
-RapidMX's end-to-end encryption uses S/MIME, a standard Outlook already understands. The private key that decrypts your mail, though, stays in your encrypted key vault and is unlocked in the web app, and RapidMX currently has no way to copy it into Outlook. Read and send encrypted mail in the [web app](web.md). See [Encryption](../user-guide/encryption.md).
+Mail protected by zero-access or end-to-end encryption shows a short explanation in Outlook instead of its body. Open it in the [web app](web.md), or export your keys and install them in Outlook. See [On phones and in Outlook](../user-guide/encryption.md#on-phones-and-in-outlook).
+
+Outlook can't open protected calendar events, contacts or tasks, even with your keys, and it doesn't send meeting invitations for a protected calendar. Send those from the web app, or leave the type out of zero-access encryption. A type Outlook already syncs starts unprotected for this reason.

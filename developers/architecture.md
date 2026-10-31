@@ -37,9 +37,12 @@ flowchart LR
         Blob[("Blob store<br/>disk or S3")]
         Bao["OpenBao"]
         Turn["coturn"]
+        Ctrl["dns-controller"]
+        ExtDns["external-dns"]
     end
 
     Internet(("Other mail<br/>servers"))
+    DnsHost(("DNS provider"))
 
     Browser -->|HTTPS| Server
     Browser -->|sign-in| Auth
@@ -61,6 +64,9 @@ flowchart LR
     Internet <-->|SMTP, port 25| Postfix
     Postfix -->|lookups, delivery| Bridge
     Bridge -->|/internal/mta| Server
+    Ctrl -->|/internal/dns| Server
+    Ctrl -->|creates| ExtDns
+    ExtDns -->|records| DnsHost
 ```
 
 ## The components
@@ -75,9 +81,11 @@ flowchart LR
 | **postfix-bridge** | `rapidmx/postfix-bridge` | A small Node service, packaged with its own Postfix, that translates Postfix's lookup tables and SMTP hand-off into the server's HTTP ingest contract. |
 | **ses-bridge** | `rapidmx/ses-bridge` | The Amazon SES alternative to postfix-bridge: an outbound `MailTransport` plus a CDK stack (S3 and a Lambda) for inbound mail. |
 | **acme** | `rapidmx/acme-server` | A standalone ACME certificate authority for S/MIME certificates (RFC 8555 with the RFC 8823 e-mail challenge), planned for `acme.rapidmx.io`. Its root is **not** publicly trusted. The server's signing-certificate enrollment is a client of any RFC 8823 CA. |
+| **dns-controller** | `rapidmx/dns-controller` | Optional. Reads the DNS records the server wants through `/internal/dns` and turns them into one external-dns Deployment per DNS provider config and `DNSEndpoint` resources. It is the only RapidMX component allowed to create or change Kubernetes objects, so the large, internet-facing server stays read-only there. |
 | **tauri-client** | `rapidmx/tauri-client` | A preview of the native desktop and mobile app. It signs in through the auth-server with OAuth 2.0 and PKCE and holds several accounts on several servers at once. |
 | **rspamd** | third party | Spam scoring, and a Bayes classifier the server teaches when users report junk. |
 | **ClamAV** | third party | Virus scanning of messages and attachments. |
+| **external-dns** | third party | Writes DNS records to the provider, one instance per provider config, when DNS publishing is on. |
 | **MongoDB or PostgreSQL** | third party | All structured data. Every model and route exists in a MongoDB and a SQL variant, and both must work. |
 | **Redis** | third party | Cache, rate limits, live notifications for the `/push` WebSocket, and the mail event stream plugins read. Also holds rspamd's classifier statistics. |
 | **Blob store** | disk or S3 | Raw messages, bodies, attachments and uploaded images, behind the `BlobStore` interface. |
@@ -197,6 +205,11 @@ answers `404` for `/internal`. With SES the first half is different: SES stores 
 ses-bridge calls the same `/internal/mta/resolve` and `/internal/mta/deliver` routes, bouncing recipients that do not
 exist. Everything from the queue onward is identical.
 
+For a mailbox using [zero-access encryption](./internals/encryption.md#zero-access-encryption), the queue is skipped. The
+server scans and files the message inside the `deliver` request, seals it to the mailbox's key, discards the plaintext and
+only then answers the MTA, asking it to retry on a transient failure. See
+[Mail flow](./internals/mail-flow.md#zero-access-delivery).
+
 If rspamd or ClamAV cannot be reached, the message is quarantined rather than delivered unscanned. Only `yarn dev`
 bypasses an unreachable scanner, and only with a development `NODE_ENV`.
 
@@ -225,10 +238,19 @@ sequenceDiagram
 ```
 
 The server generates each domain's DKIM key pair and shows the public key in the admin console's DNS checklist.
-Postfix signs with the private key, which it reads from a volume the server writes to. If the message is S/MIME
-encrypted, the browser encrypted it before sending, and the server only relays ciphertext. With a background send
+Postfix signs with the private key, which it reads from a volume the server writes to. If the message is encrypted end to
+end, with S/MIME or OpenPGP, the browser encrypted it before sending, and the server only relays ciphertext. With a background send
 the server answers `202` at once and reports the outcome through push events. With SES, `SesMailTransport` calls the
 SES API directly instead of `sendmail`.
+
+## How DNS publishing flows
+
+DNS publishing is optional and off by default (`dns.publishing.enabled`). An administrator creates DNS provider configs
+and assigns domains to them. The server records what it wants published and bumps a version counter in Redis. The
+controller long-polls `/internal/dns`, authenticating with a projected Kubernetes token that the server checks against the
+cluster's service-account keys, and reconciles. A domain with no provider stays manual, and the same function
+(`buildDesiredDnsRecords()`) builds both the checklist and the published records, so the two can't disagree. The design is
+`specs/dns_publishing_and_integrations.md` in `@rapidmx/restapi`.
 
 ## Where state lives
 
@@ -241,7 +263,10 @@ SES API directly instead of `sendmail`.
 | DKIM keys | A volume shared by the server and Postfix |
 | Encryption certificate authority | A local volume, or an OpenBao PKI mount |
 | Deployment secrets | Kubernetes Secrets, filled from OpenBao when it is enabled |
-| Users' private encryption keys | The user's key vault, wrapped in the browser by a password, recovery code or passkey |
+| Secrets saved in the admin console (DNS credentials, plugin secret settings, API keys, registry tokens) | The database, as AES-256-GCM envelopes |
+| The configuration keyring that opens those envelopes | The Secret `<fullname>-config-keyring`, synced from OpenBao's KV when it is enabled. Only the server pods mount it. A production server won't start without it, and a database backup is useless without it. |
+| Users' private encryption, signing, OpenPGP and zero-access keys | The user's key vault, wrapped in the browser by a password, recovery code or passkey |
+| Sealed zero-access content | Message blobs under `za/<mailbox>/<uid>` in the blob store, sealed fields and index entries in the database |
 
 The database schema is created and updated from the models when the server starts. There are no migration scripts,
 so a model change takes effect on the next start, on both backends.

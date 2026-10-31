@@ -155,7 +155,7 @@ function Hero(): ReactNode {
     <header className={styles.hero}>
       <div className={clsx('container', styles.heroInner)}>
         <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>Open source · Self-hosted · End-to-end encrypted</span>
+          <span className={styles.eyebrow}>Open source · Self-hosted · Encrypted by default</span>
           <Heading as="h1" className={styles.heroTitle}>
             An open source all-in-one communications platform.
             <br />
@@ -163,8 +163,9 @@ function Hero(): ReactNode {
           </Heading>
           <p className={styles.heroLead}>
             RapidMX is a complete communications platform you run yourself: email, calendar, contacts, tasks,
-            video meetings and booking pages, with end-to-end encryption built in. Everything your team relies on
-            from Google Workspace or Microsoft 365, without handing your conversations to someone else's cloud.
+            video meetings and booking pages. Your data is stored encrypted to keys only your users hold, with
+            end-to-end encryption over S/MIME and OpenPGP built in. Everything your team relies on from Google Workspace
+            or Microsoft 365, without handing your conversations to someone else's cloud.
           </p>
           <div className={styles.heroButtons}>
             <Link className={clsx('button button--lg', styles.buttonPrimary)} to="/docs/getting-started/overview">
@@ -183,6 +184,9 @@ function Hero(): ReactNode {
             </li>
             <li>
               <Icon name="check" /> Get up and running in an hour
+            </li>
+            <li>
+              <Icon name="check" /> DNS records published for you
             </li>
           </ul>
         </div>
@@ -218,8 +222,8 @@ function BrowserFrame({src, alt, url}: {src: string; alt: string; url: string}):
 const PILLARS = [
   {value: 'MPL-2.0', label: 'OSI certified license'},
   {value: '$0', label: 'Per-user fees'},
-  {value: 'S/MIME', label: 'End-to-end encryption'},
-  {value: 'Any Domain', label: 'Host from multiple domains'},
+  {value: 'Zero-access', label: 'Encryption at rest'},
+  {value: 'S/MIME + PGP', label: 'End-to-end encryption'},
 ];
 
 function ProofStrip(): ReactNode {
@@ -247,8 +251,8 @@ const REASONS = [
     title: 'Nobody else reads your mail',
     body:
       "Your data lives on hardware you own, in the country you choose. There's no ad profile, no AI " +
-      'training on your inbox and no provider with a master key. Administrators manage the ' +
-      "platform, not everyone's mail.",
+      'training on your inbox and no provider with a master key. Mail is sealed as it arrives, to a key only its ' +
+      "mailbox's users hold, so administrators manage the platform, not everyone's mail.",
   },
   {
     icon: 'scale',
@@ -402,11 +406,26 @@ function Features(): ReactNode {
 
 const SECURITY = [
   {
+    icon: 'eye',
+    title: 'Zero-access encryption',
+    body:
+      'Message contents, calendar details, contacts and tasks are sealed to a key only the mailbox’s users hold, and ' +
+      'the server keeps no readable copy. Administrators, storage and backups can’t read them, and search runs on ' +
+      'your device. Details needed for delivery, such as senders and dates, stay readable.',
+  },
+  {
     icon: 'lock',
     title: 'End-to-end encryption, built in',
     body:
-      'S/MIME signing and encryption happen in the browser, and every person gets their own keys, kept in a vault ' +
-      'only they can unlock. Make encryption automatic, optional or off for each kind of recipient.',
+      'S/MIME signing and encryption happen on your device, so the server never sees the message, and every person ' +
+      'gets their own keys, kept in a vault only they can unlock. Make encryption automatic, optional or off for each kind of recipient.',
+  },
+  {
+    icon: 'globe',
+    title: 'OpenPGP, for everyone else',
+    body:
+      'Exchange encrypted mail with people on Proton Mail, Thunderbird and GnuPG. Every mailbox gets an OpenPGP key, ' +
+      'published through Web Key Directory, and RapidMX picks the right format for each recipient, never falling back to plain text.',
   },
   {
     icon: 'key',
@@ -426,15 +445,16 @@ const SECURITY = [
     icon: 'globe',
     title: 'Trusted delivery',
     body:
-      'DKIM signing and verification, SPF and DMARC with a live DNS checklist per domain, and mandatory TLS ' +
-      'between mail servers.',
+      'DKIM signing, verification and scheduled key rotation, SPF and DMARC with a live DNS checklist per domain, and ' +
+      'mandatory TLS between mail servers.',
   },
   {
     icon: 'search',
     title: 'eDiscovery, scoped to the matter',
     body:
       'Open a matter to place its custodians under legal hold, then search and export their mail, contacts and ' +
-      'calendars across the matter’s date range. Every search, export and download is audited.',
+      'calendars across the matter’s date range. Sealed content stays sealed unless holders release its keys, and ' +
+      'every search, export and download is audited.',
   },
   {
     icon: 'scale',
@@ -442,6 +462,13 @@ const SECURITY = [
     body:
       'Organizations that must be able to recover encrypted mail can enable key escrow: every request needs M-of-N ' +
       'approvals and lands in a tamper-evident, hash-chained audit log.',
+  },
+  {
+    icon: 'key',
+    title: 'Admin secrets, encrypted too',
+    body:
+      'DNS provider credentials, API keys and plugin secrets saved in the console are encrypted in the database, so a ' +
+      'database dump or backup alone reveals none of them. Rotate the key from the console whenever you need to.',
   },
 ];
 
@@ -455,7 +482,9 @@ function Security(): ReactNode {
           <p>
             A privacy policy is a promise. Encryption and self-hosting are guarantees. RapidMX is the first
             open-source communications platform with turn-key federated S/MIME encryption — including automated X.509
-            certificate issuance, key discovery and rotation — that works with standard mail clients.
+            certificate issuance, key discovery and rotation — that works with standard mail clients. Zero-access
+            encryption then protects everything else at rest: the server handles a message only long enough to scan
+            and deliver it, then keeps nothing it can read.
           </p>
         </div>
         <div className={styles.securityGrid}>
@@ -485,6 +514,7 @@ function Security(): ReactNode {
 
 const ADMIN_POINTS = [
   'Host as many mail domains as you like, each with a live DNS checklist for MX, SPF, DKIM and DMARC',
+  'Automatic DNS: connect Cloudflare, Route 53, Google Cloud DNS, Azure DNS or an RFC 2136 server and RapidMX publishes each domain’s records, so nobody types them by hand',
   'Mailboxes, aliases, nested distribution lists, shared mailboxes with delegation, and bookable rooms',
   'Transport rules, retention policies, legal hold and eDiscovery search and export',
   'Data-subject export and erasure requests for GDPR and similar laws',
@@ -502,7 +532,8 @@ function Admin(): ReactNode {
           <Heading as="h2">Everything an IT team needs, in one console</Heading>
           <p>
             A guided setup wizard takes you from a fresh install to your first working mailbox. After that, one admin
-            console covers the whole organization. Add a domain and it works within seconds, with nothing to restart.
+            console covers the whole organization. Add a domain and it works within seconds, with nothing to restart and,
+            with a DNS provider connected, no trip to your DNS host.
           </p>
           <ul className={styles.checkList}>
             {ADMIN_POINTS.map((p) => (
@@ -533,7 +564,7 @@ const DEPLOY_OPTIONS = [
     key: 'single',
     label: 'Linux Server',
     blurb:
-      'A single script installs a lightweight Kubernetes (k3s), HTTPS certificates from Let\'s Encrypt, Postfix and RapidMX on a Debian, Ubuntu or RHEL server.',
+      'A single script installs a lightweight Kubernetes (k3s), HTTPS certificates from Let\'s Encrypt, Postfix and RapidMX on a Debian, Ubuntu or RHEL server. Add --dns-provider and it publishes your DNS records too.',
     code: `curl -fsSLO https://raw.githubusercontent.com/rapidmx/server/main/single_node_install.sh
 chmod +x single_node_install.sh
 ./single_node_install.sh --domain example.com --email you@example.com`,
@@ -627,7 +658,8 @@ const COMPARE: {row: string; rmx: Cell; google: Cell; ms: Cell}[] = [
   {row: 'Source code you can read and audit', rmx: yes('MPL-2.0'), google: no(), ms: no()},
   {row: 'Licensing', rmx: yes('Free, any number of users'), google: no('Per user, per month'), ms: no('Per user, per month')},
   {row: 'You choose where data is stored', rmx: yes('Any country, any host'), google: partial('Data regions on some plans'), ms: partial('Data residency on some plans')},
-  {row: 'End-to-end encryption for every user', rmx: yes('S/MIME, built in'), google: partial('Client-side encryption on top tiers'), ms: partial('S/MIME with your own PKI')},
+  {row: 'Stored data unreadable to the operator', rmx: yes('Zero-access, on by default'), google: partial('Customer-managed keys on top tiers'), ms: partial('Customer-managed keys on top tiers')},
+  {row: 'End-to-end encryption for every user', rmx: yes('S/MIME and OpenPGP, built in'), google: partial('Client-side encryption on top tiers'), ms: partial('S/MIME with your own PKI')},
   {row: 'Mail, calendar, contacts and tasks', rmx: yes(), google: yes(), ms: yes()},
   {row: 'Video meetings', rmx: yes('via Plugin'), google: yes(), ms: yes()},
   {row: 'Booking pages', rmx: yes('via Plugin'), google: yes(), ms: yes()},
@@ -740,7 +772,7 @@ function Developers(): ReactNode {
             <div className={styles.devCard}>
               <Icon name="globe" />
               <strong>Open protocols</strong>
-              <span>S/MIME, ActiveSync, Autodiscover, ACME</span>
+              <span>S/MIME, OpenPGP, Web Key Directory, Autocrypt, ActiveSync, Autodiscover, ACME</span>
             </div>
             <div className={styles.devCard}>
               <Icon name="users" />
@@ -802,7 +834,8 @@ const FAQ: {q: string; a: ReactNode}[] = [
       <>
         For most people, no. The built-in mail apps on Android, iOS, and Windows connect through Exchange
         ActiveSync. Support for Outlook for Windows, over MAPI over HTTP, is still being finished. The built-in web app
-        works in any modern browser. RapidMX does not support IMAP or POP3.
+        works in any modern browser. RapidMX does not support IMAP or POP3. To read zero-access mail in another app,
+        install your exported keys on it. See <Link to="/docs/user-guide/encryption#on-phones-and-in-outlook">Encryption</Link>.
       </>
     ),
   },
@@ -811,9 +844,43 @@ const FAQ: {q: string; a: ReactNode}[] = [
     a: (
       <>
         Administrators manage the platform: domains, policies, plugins and branding. They don't see other people's
-        mail in the app. Getting into someone else's mailbox takes a deliberate action that is recorded in the audit
-        log, and encrypted messages stay unreadable without the owner's key unless your organization has set up key
-        escrow, which itself requires multiple approvers.
+        mail in the app. Once you've signed in to the web app and your mailbox has its keys, zero-access encryption
+        keeps stored mail unreadable without them, even if an administrator impersonates you, unless your organization
+        has set up key escrow, which itself requires multiple approvers. An administrator can turn zero-access off for
+        new mail, and everyone sees in their settings that they did.
+      </>
+    ),
+  },
+  {
+    q: 'How is zero-access encryption different from end-to-end encryption?',
+    a: (
+      <>
+        End-to-end encryption happens on the sender's device, so the server never sees the message, but it needs a key
+        for every recipient. Zero-access encryption covers everything else, such as mail from people who don't use
+        encryption at all: the server sees that message while it scans and delivers it, then seals it to your key and
+        keeps no readable copy. That protects stored data, not a server that is already compromised at the moment of
+        delivery. See <Link to="/docs/user-guide/encryption">Encryption</Link>.
+      </>
+    ),
+  },
+  {
+    q: 'Can I send encrypted mail to people on Proton Mail?',
+    a: (
+      <>
+        Yes. Every mailbox gets an OpenPGP key alongside its S/MIME certificates, published through Web Key Directory,
+        so encrypted mail works in both directions with Proton Mail, Thunderbird, GnuPG and other OpenPGP apps. RapidMX
+        finds the recipient's key and picks the format for you.
+      </>
+    ),
+  },
+  {
+    q: 'Does RapidMX set up my DNS?',
+    a: (
+      <>
+        It can, on Kubernetes and with the single-server installer. Connect a DNS provider and RapidMX publishes each
+        domain's records and keeps them up to date, including new DKIM keys. A few stay manual, such as reverse DNS, and
+        SPF until you opt in. Without a provider, a live checklist shows what to add. See{' '}
+        <Link to="/docs/administration/dns-publishing">Automatic DNS</Link>.
       </>
     ),
   },
@@ -898,7 +965,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Private, self-hosted email and collaboration"
-      description="RapidMX is an open-source, self-hosted alternative to Google Workspace and Microsoft 365: email, calendar, contacts, video meetings and booking pages with end-to-end encryption, on servers you control.">
+      description="RapidMX is an open-source, self-hosted alternative to Google Workspace and Microsoft 365: email, calendar, contacts, video meetings and booking pages with zero-access and end-to-end encryption, on servers you control.">
       <Hero />
       <main>
         <ProofStrip />

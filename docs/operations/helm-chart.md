@@ -154,6 +154,64 @@ stored value, the render fails and tells you how to read the stored one.
 
 With `global.openbao.enabled`, all of these live in OpenBao instead. See [Secrets and OpenBao](secrets-and-openbao.md).
 
+### Configuration keyring
+
+The chart generates `<fullname>-config-keyring` once, in a hook that Helm keeps through uninstall and rollback. It
+encrypts the credentials saved in the admin console. A production server refuses to start without it, and a database
+backup is useless without it. A render without cluster access fails until `configEncryption.existingSecret` names a
+Secret you manage. See [The configuration keyring](secrets-and-openbao.md#the-configuration-keyring).
+
+### DNS publishing
+
+With `dns.publishing.enabled`, the chart deploys the DNS controller, which runs one
+[external-dns](https://github.com/kubernetes-sigs/external-dns) instance per DNS provider config an administrator manages
+in the admin console. Turned off (the default), none of it is rendered and every record is published by hand.
+[DNS publishing](../administration/dns-publishing.md) explains the feature.
+
+- **The `DNSEndpoint` CRD comes first.** It is cluster-scoped, so the chart doesn't ship it. Apply
+  `deploy/crds/dnsendpoints.externaldns.k8s.io.yaml` from the [server repository](https://github.com/rapidmx/server), or
+  let the single-server installer do it. Without it, the controller reports publishing unavailable.
+- **Set `dns.publicAddresses`.** They are the addresses the mail host and `auth.<global.domain>` are published at, global
+  unicast only. Empty publishes nothing for the hosts.
+- **Permissions stay namespaced.** The controller has a `Role` in the release namespace, and no `ClusterRole`.
+- **Route 53 without access keys** uses the IAM role in `dns.externalDns.serviceAccount.annotations`.
+
+To turn it off, first remove the publishing in the admin console, while the controller runs: unassign the domains or
+delete the provider configs. Helm removes the controller but not what it made, so what's left has to be deleted by label:
+
+```bash
+kubectl -n rapidmx delete dnsendpoints,deployments,jobs,secrets \
+  -l app.kubernetes.io/managed-by=rapidmx-dns-controller,app.kubernetes.io/instance=rapidmx
+```
+
+Records already in DNS then stay until you delete them at the provider. A domain managing its root TXT records must opt
+out in the admin console first, since that is what restores its SPF and kept values.
+
+### Domains
+
+`mail.domains` lists the domains the server creates when it starts. Empty means `global.domain` and each domain of
+`postfixBridge.domains`, each on the `dns.bootstrapProvider` config while one is set. A domain is created only once: an
+existing one is never changed, one you delete stays deleted, and a name taken off the list isn't deleted. On an upgraded
+deployment, the first list is adopted rather than created, so add any missing domain in the admin console.
+
+### OpenPGP key host
+
+The server always answers the OpenPGP Web Key Directory at `/.well-known/openpgpkey` on `host`. With
+`mail.wkd.openpgpkeyHost.enabled` on, the chart also certifies and routes `openpgpkey.<global.domain>`, the host OpenPGP
+clients try first.
+
+| Value | Effect |
+| --- | --- |
+| `auto` | On when `dns.publishing.enabled` is set and a `dns.bootstrapProvider` covers `global.domain`, since that publishes the record. Otherwise off. |
+| `true` | Always on |
+| `false` | Always off |
+
+:::warning Add the record first
+With it on, the name is on `host`'s certificate. Without a DNS record (a CNAME to `host`, or A/AAAA records to the
+Gateway), the certificate challenge never passes, `host` gets no renewed certificate either, and `helm upgrade --wait`
+times out.
+:::
+
 ### Gateway and TLS
 
 By default the chart creates a Gateway named `<fullname>-gateway` with `global.gateway.className`, and an Issuer named
@@ -289,7 +347,8 @@ Values are literal, as in `values.yaml`. Many are Helm templates rendered agains
 | `global.externalSecrets.refreshInterval` | How often External Secrets re-reads the vault | `1m` |
 | `global.logs.level` | Log level. Not read by this chart's templates; the server's level is its `logger__level` setting (see [Server configuration](configuration.md)). | `info` |
 | `global.openbao.enabled` | Keep the release's secrets in OpenBao | `false` |
-| `global.openbao.address` | OpenBao's address | `http://openbao.openbao.svc:8200` |
+| `global.openbao.address` | OpenBao's address. Must be `https://`. | `https://openbao.openbao.svc:8200` |
+| `global.openbao.caConfigMap` | ConfigMap holding, under `ca.crt`, the CA of OpenBao's listener. Empty: the system's trust store. | `''` |
 | `global.openbao.kvMount` | The kv v2 mount | `secret` |
 | `global.openbao.secretsPath` | The path of this release's secrets. Empty: `<fullname>/secrets`. | `''` |
 | `global.openbao.auth.method` | `token` or `kubernetes` | `token` |
@@ -298,6 +357,7 @@ Values are literal, as in `values.yaml`. Many are Helm templates rendered agains
 | `global.openbao.auth.kubernetes.mountPath` | Kubernetes auth mount | `kubernetes` |
 | `global.openbao.auth.kubernetes.role` | OpenBao role bound to the ServiceAccount. Required with `kubernetes`. | `''` |
 | `global.openbao.auth.kubernetes.serviceAccount` | ServiceAccount External Secrets authenticates as | `default` |
+| `global.openbao.auth.kubernetes.audience` | Audience of that ServiceAccount's token, which the role checks | `''` |
 | `global.secrets.existingSecret` | A Secret you manage with `cookie_secret`, `session__secret` and `mail__escrow__audit_hmac_key`, used instead of the generated one | `''` |
 | `global.secrets.cookies` | Cookie secret. Empty: generated once and kept. | `''` |
 | `global.secrets.sessions` | Session secret. Empty: generated once and kept. | `''` |
@@ -475,6 +535,9 @@ Values are literal, as in `values.yaml`. Many are Helm templates rendered agains
 | `mail.pki.storage.storageClassName` | PKI volume storage class | `'{{ .Values.global.storageClass }}'` |
 | `mail.pki.storage.accessMode` | PKI volume access mode | `ReadWriteOnce` |
 | `mail.pki.storage.size` | PKI volume size | `1Gi` |
+| `mail.domains` | The domains the server creates at start: names, objects of `name`, `dnsProvider`, `dmarcPolicy`, `dmarcReportEmail` and `aliasOf`, or a comma-separated string. Empty: `global.domain` and `postfixBridge.domains`. | `[]` |
+| `mail.zeroAccess.allowed` | Default of **Allow zero-access encryption**. A value saved in the admin console wins. | `true` |
+| `mail.wkd.openpgpkeyHost.enabled` | Serve `openpgpkey.<global.domain>`: `auto`, `true` or `false` | `auto` |
 | `mail.signingEnrollment.backend` | `auto`, `rfc8823` or `manual` | `auto` |
 | `mail.signingEnrollment.directoryUrl` | RFC 8823 ACME directory (must be `https://`) | `https://acme.castle.cloud/acme/directory` |
 | `mail.signingEnrollment.contactEmail` | ACME account contact. Empty: `global.certmanager.email`. | `''` |
@@ -529,6 +592,38 @@ Values are literal, as in `values.yaml`. Many are Helm templates rendered agains
 | `coturn.tolerations` | coturn tolerations | `[]` |
 | `coturn.resources.requests.cpu` | coturn CPU request | `50m` |
 | `coturn.resources.requests.memory` | coturn memory request | `64Mi` |
+| `dns.publishing.enabled` | Deploy the DNS controller and publish records | `false` |
+| `dns.publicAddresses` | Global unicast IPv4 and IPv6 addresses the hosts' A/AAAA records point at. Empty: nothing is published for the hosts. | `[]` |
+| `dns.ttl` | TTL of published records, in seconds. Cloudflare needs at least 120, and the server raises it there. | `300` |
+| `dns.bootstrapProvider` | Provider config the server creates once: `{ name, type, zones, options }`, optionally `allowTakeover`. Credentials go in the Secret `<fullname>-dns-bootstrap`. | `{}` |
+| `dns.externalDns.image` | The only image the controller runs for a provider config | `registry.k8s.io/external-dns/external-dns:v0.23.0@sha256:1854499e2b08cee47c40a08e356bff20dcb192dbcfde8378fc3f900f12cad5a3` |
+| `dns.externalDns.resources` | Resources of the external-dns containers | `{}` |
+| `dns.externalDns.serviceAccount.annotations` | Annotations of the external-dns ServiceAccount, such as `eks.amazonaws.com/role-arn` | `{}` |
+| `dns.controller.image.registry` | Controller image registry | `ghcr.io` |
+| `dns.controller.image.repository` | Controller image repository | `rapidmx/dns-controller` |
+| `dns.controller.image.tag` | Controller image tag. Clearing both this and `digest` fails the render. | `0.1.0` |
+| `dns.controller.image.digest` | Used instead of the tag when set | `''` |
+| `dns.controller.resyncMinutes` | How often everything is reconciled while nothing changes | `10` |
+| `dns.controller.longPollTimeoutSeconds` | Wait for the server's long-poll answer. `0`: the controller's default, 75. | `0` |
+| `dns.controller.statusIntervalSeconds` | Status report interval. `0`: the controller's default, 60. | `0` |
+| `dns.controller.serverCA.configMap` | ConfigMap with a CA bundle for the server's certificate, for `global.gateway.tlsTermination: pod` | `''` |
+| `dns.controller.serverCA.key` | Key of the bundle | `ca.crt` |
+| `dns.controller.resources.requests.cpu` | Controller CPU request | `10m` |
+| `dns.controller.resources.requests.memory` | Controller memory request | `64Mi` |
+| `dns.controller.resources.limits.memory` | Controller memory limit | `256Mi` |
+| `configEncryption.existingSecret` | A Secret you manage with the key `keyring.json`, mounted instead of a generated one. Ignored with OpenBao. | `''` |
+| `configEncryption.existingSecretRotation` | Let the server's rotation replace that Secret. Only for a Secret nothing else reconciles. | `false` |
+| `configEncryption.externalSecretRefreshInterval` | How often External Secrets reads the vault's keyring | `1m` |
+| `configEncryption.rbac.create` | Create the Role that lets the server write the keyring Secret. Not rendered with OpenBao. | `true` |
+| `configEncryption.openbao.path` | The keyring's KV path. Empty: `<fullname>/config-keyring`. | `''` |
+| `openbao.auth.method` | The server's own OpenBao login: `kubernetes` or `token`. Empty: no identity. | `''` |
+| `openbao.auth.role` | Role with `kubernetes`. Empty: `<fullname>-server`. | `''` |
+| `openbao.auth.mountPath` | Kubernetes auth mount | `kubernetes` |
+| `openbao.auth.audience` | Audience of the projected token | `openbao` |
+| `openbao.auth.tokenSecret` | Secret with the key `token`, with `token` | `''` |
+| `openbao.pki.mount` | OpenBao PKI mount of the encryption CA | `pki` |
+| `openbao.pki.role` | Its issuing role | `rapidmx-encryption` |
+| `openbao.externalSecrets.createServiceAccount` | Create `global.openbao.auth.kubernetes.serviceAccount` | `true` |
 
 ### Values the chart reads that have no default in `values.yaml`
 
@@ -539,10 +634,6 @@ Values are literal, as in `values.yaml`. Many are Helm templates rendered agains
 | `authserver.host` | The auth-server's host name (the subchart's default is `auth.<global.domain>`) | unset |
 | `global.defaultAccounts` | Accounts the auth-server creates on first start (the subchart's default is one `admin` account with the `admin` role and a generated password) | unset |
 | `postfixBridge.tls.existingSecret` | Postfix's own `kubernetes.io/tls` Secret, for example `<host>-tls-cert` | unset |
-| `openbao.pki.mount` | OpenBao PKI mount of the encryption CA | unset |
-| `openbao.pki.role` | Its issuing role | unset |
-| `openbao.pki.enabled` | Load the PKI token Secret into the server pod | unset |
-| `openbao.pki.tokenSecret` | Secret whose `mail__pki__openbao__token` may sign and revoke on that role | unset |
 | `service.imagePullSecret` | Image pull Secret of the server pod | unset |
 | `service.spec` | Extra fields added to the server's pod spec | unset |
 | `fullnameOverride`, `nameOverride` | Override the chart's resource names | unset |

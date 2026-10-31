@@ -24,7 +24,8 @@ version starts, and a backup is the only way to undo that.
 | **DKIM keys** | The private keys outgoing mail is signed with | Mail fails DKIM until you publish new keys in DNS for every domain. |
 | **PKI volume** | The local encryption certificate authority's key, the signing-certificate ACME account and pending requests | New encryption certificates come from a new CA that existing correspondents don't recognize. |
 | **Secrets** | The JWT, cookie and session secrets, the mail ingest secret, the escrow audit key, the auth-server's own secrets | The escrow audit log stops verifying without its key. Lost sign-in secrets only sign everyone out. |
-| **OpenBao** (when used) | The secrets above, and the encryption CA's key on the PKI mount | Without the `openbao-keys` Secret, nothing in the vault can be recovered. |
+| **Configuration keyring** | The key that encrypts the credentials and tokens saved in the admin console | A production server refuses to start without a keyring, and those saved values can't be read: DNS provider credentials, the Giphy key, plugin registry tokens and plugins' secret settings must all be entered again. |
+| **OpenBao** (when used) | The secrets above, the keyring, and the encryption CA's key on the PKI mount | Without the `openbao-keys` Secret, nothing in the vault can be recovered. |
 
 Things you don't need to back up: Redis (a cache; it only holds the spam filter's learned statistics, which rebuild
 from users' reports), the plugins folder (reinstalled at every start), ClamAV's signatures, and Postfix's TLS
@@ -36,6 +37,19 @@ the escrow audit log. Keep a copy with your database backups and restore **the s
 checked against a different key no longer verifies.
 :::
 
+:::danger The configuration keyring
+A database backup is useless without the [configuration keyring](secrets-and-openbao.md#the-configuration-keyring) it was
+encrypted with. Keep each keyring copy as long as the database backups it serves, and back it up again after every
+rotation. On a k3s cluster the single-server installer made, `--uninstall` removes the whole cluster with the keyring,
+so save it first if you keep the database.
+:::
+
+:::note Zero-access mail in backups
+Mail, calendar, contact and task content protected by [zero-access encryption](../administration/encryption-and-certificates.md)
+stays encrypted in the database and message storage, so backups hold ciphertext. The keys are in each user's key vault,
+locked by their own encryption password or recovery codes. Restoring a backup can't get around a lost password.
+:::
+
 ### Where each part lives
 
 | Part | Kubernetes, k3s, AWS | Docker Compose (project `rapidmx`) |
@@ -45,6 +59,7 @@ checked against a different key no longer verifies.
 | DKIM keys | Claim `rapidmx-server-dkim-keys`, mounted at `/var/lib/rspamd/dkim` | Volume `rapidmx_dkim_rspamd_keys` |
 | PKI | Claim `rapidmx-server-pki-data`, mounted at `/var/lib/rapidmx/pki` | Volume `rapidmx_pki_data` |
 | Secrets | Secrets in the release namespace (or OpenBao) | Your `.env` file |
+| Configuration keyring | Secret `rapidmx-server-config-keyring`, key `keyring.json` (or OpenBao, `secret/rapidmx-server/config-keyring`) | The file or value in `config_encryption:keyring_file` or `config_encryption:keyring` |
 
 The names above are for a release named `rapidmx` (the Kubernetes guide and the single-server installer). On AWS the
 release and namespace are `rapidmx-server`, and the resources are named `rapidmx-server-...` the same way. The bundled
@@ -83,6 +98,12 @@ encrypted: they contain all of your mail and your secrets.
 
    ```bash
    kubectl -n rapidmx get secret rapidmx-server-service-secrets -o jsonpath='{.data.mail__escrow__audit_hmac_key}' | base64 -d
+   ```
+
+   The configuration keyring on its own, also to keep with the database backups:
+
+   ```bash
+   kubectl -n rapidmx get secret rapidmx-server-config-keyring -o jsonpath='{.data.keyring\.json}' | base64 -d > rapidmx-keyring-$(date +%F).json
    ```
 
 4. **OpenBao**, if the installer set it up. Save the Secret with the vault's unseal key and root token:
@@ -128,7 +149,7 @@ Run these in the server checkout. Volume names start with the project name, `rap
    done
    ```
 
-3. **Your `.env` file**, which holds every secret.
+3. **Your `.env` file**, which holds every secret, and the configuration keyring if you keep it in a file of its own.
 
 ## Restore
 
@@ -142,14 +163,24 @@ installation of the **same version** you backed up, before anyone uses it.
 
    ```bash
    helm upgrade --install --create-namespace --namespace rapidmx rapidmx \
-     oci://ghcr.io/rapidmx/charts/server --version 1.0.0-beta.43 \
+     oci://ghcr.io/rapidmx/charts/server --version 1.0.0-beta.47 \
      --set global.domain=example.com \
      --set global.jwt.secret=<backed-up auth__secret> \
      --set global.mailIngestSecret=<backed-up mail__transport__ingest__secret> \
-     --set mail.escrow.auditHmacKey=<backed-up escrow audit key>
+     --set mail.escrow.auditHmacKey=<backed-up escrow audit key> \
+     --set configEncryption.existingSecret=rapidmx-restored-keyring
    ```
 
-   With OpenBao, restore the vault (its volume and the `openbao-keys` Secret) first, then install as before.
+   Create the Secret that last value names first, in the same namespace, from the keyring that belongs to the database
+   backup, or the release generates a new keyring that can't read the restored values:
+
+   ```bash
+   kubectl create namespace rapidmx
+   kubectl -n rapidmx create secret generic rapidmx-restored-keyring --from-file=keyring.json=rapidmx-keyring-2026-10-12.json
+   ```
+
+   With OpenBao, restore the vault (its volume and the `openbao-keys` Secret) first, then install as before. The keyring
+   comes back with the vault, without `configEncryption.existingSecret`.
 
 2. Wait for the pods to start, then stop the server and the auth-server so nothing writes during the restore:
 
@@ -181,7 +212,8 @@ installation of the **same version** you backed up, before anyone uses it.
    ```
 
 6. Sign in, open a few messages with attachments, and check each domain's DNS checklist in the admin console: the DKIM
-   row should be **Live** without any DNS change.
+   row should be **Live** without any DNS change. Check that no saved secret on the **Integrations** pages shows **Set,
+   but can't be read: enter it again**, which means the keyring doesn't match the database.
 
 ### Docker Compose
 

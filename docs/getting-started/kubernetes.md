@@ -45,7 +45,7 @@ cluster-wide rights beyond what Helm needs to create the namespace.
 
    ```bash
    helm upgrade --install --create-namespace --namespace rapidmx rapidmx \
-     oci://ghcr.io/rapidmx/charts/server --version 1.0.0-beta.43 \
+     oci://ghcr.io/rapidmx/charts/server --version 1.0.0-beta.47 \
      --set global.domain=example.com \
      --set global.jwt.secret="$(openssl rand -hex 32)" \
      --set global.mailIngestSecret="$(openssl rand -hex 32)"
@@ -58,7 +58,8 @@ cluster-wide rights beyond what Helm needs to create the namespace.
 
    :::warning Keep both secrets
    An upgrade needs the same two values, or `--reset-then-reuse-values`. If you lose them, you can read them back from
-   the cluster, as shown in [Upgrading](../operations/upgrading.md).
+   the cluster, as shown in [Upgrading](../operations/upgrading.md). The chart also generates a
+   [configuration keyring](../operations/secrets-and-openbao.md#the-configuration-keyring). Back it up with your database.
    :::
 
 3. Watch it start. Every pod should reach `Running`. ClamAV takes a few minutes to load its signatures:
@@ -140,6 +141,8 @@ you must back up.
 | Use a Gateway you already have | `global.gateway.name` and `global.gateway.namespace`. The Gateway needs an HTTPS listener per host that terminates TLS with the `<host>-tls-cert` Secret, which the chart lets it read through a `ReferenceGrant`. |
 | Use different host names | `host` and `global.serverHost` (to the same value), and `authserver.host` |
 | Keep secrets in OpenBao | `global.openbao.enabled=true` and the rest of [Secrets and OpenBao](../operations/secrets-and-openbao.md) |
+| Publish DNS records automatically | `dns.publishing.enabled=true` and `dns.publicAddresses`, with the `DNSEndpoint` CRD applied first, see [DNS publishing](../operations/helm-chart.md#dns-publishing) |
+| Turn off zero-access encryption by default | `mail.zeroAccess.allowed=false`, see [Encryption and certificates](../administration/encryption-and-certificates.md) |
 | Send through Amazon SES | `mail.transport.provider=ses` and `postfixBridge.create=false`, see [Mail transport](../operations/mail-transport.md) |
 | Turn off the TURN server | `coturn.create=false`, see [Video calls: the TURN relay](../operations/video-relay.md) |
 | Install from a checkout | `helm repo add bitnami https://charts.bitnami.com/bitnami`, then `helm dep up ./helm`, and use `./helm` in place of the `oci://` address |

@@ -21,7 +21,7 @@ Two things have to be in place for each mail domain:
 
 ## Add the DNS record
 
-Each domain's page in the admin console has a DNS setup checklist. While the Autodiscover plugin is installed, the checklist includes two extra rows, **Autodiscover (CNAME)** and **Autodiscover (SRV)**, with the exact values to copy. You only need one of them.
+With a DNS provider connected, RapidMX publishes these records for you. See [Automatic DNS](../administration/dns-publishing.md). Otherwise, each domain's page in the admin console has a DNS setup checklist. While the Autodiscover plugin is installed, the checklist includes two extra rows, **Autodiscover (CNAME)** and **Autodiscover (SRV)**, with the exact values to copy. You only need one of them.
 
 | Type | Name | Value |
 | --- | --- | --- |
