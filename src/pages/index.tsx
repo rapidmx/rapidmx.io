@@ -670,7 +670,7 @@ const COMPARE: {row: string; rmx: Cell; google: Cell; ms: Cell; grommunio: Cell}
   {row: 'Booking pages', rmx: yes('via Plugin'), google: yes(), ms: yes(), grommunio: no()},
   {row: 'Works with existing apps', rmx: yes('Exchange ActiveSync'), google: yes(), ms: yes(), grommunio: yes('Outlook (MAPI), ActiveSync')},
   {row: 'Retention, legal hold and eDiscovery', rmx: yes('Included'), google: partial('Higher tiers'), ms: partial('Higher tiers'), grommunio: yes('grommunio Archive')},
-  {row: 'Extend the server with your own plugins', rmx: yes('Server and app plugins, as npm packages'), google: partial('Client-side add-ons only'), ms: partial('Client-side add-ins only'), grommunio: partial('Web app plugins')},
+  {row: 'Extend with your own plugins', rmx: yes('Server and app plugins, as npm packages'), google: partial('Client-side add-ons only'), ms: partial('Client-side add-ins only'), grommunio: partial('Web app plugins')},
   {row: 'Documents, spreadsheets and file storage', rmx: no('Coming soon'), google: yes(), ms: yes(), grommunio: yes('Nextcloud and OnlyOffice based')},
 ];
 
