@@ -40,6 +40,8 @@ To keep the details of particular events hidden from people who can view your ca
 
 ## Work in a mailbox shared with you
 
+![A shared mailbox in the folder pane](/img/screenshots/shared-mailboxes-light.webp#light)![A shared mailbox in the folder pane](/img/screenshots/shared-mailboxes-dark.webp#dark)
+
 As soon as a mailbox is shared with you, it appears in the web app. You don't need to add it.
 
 - **Mail**: it gets its own section in the folder list. **All Mailboxes** at the top merges the inboxes, sent mail, drafts, deleted items and junk of every mailbox you can open. Team mailboxes have a group icon.

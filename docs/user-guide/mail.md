@@ -10,7 +10,7 @@ Mail is where you'll spend most of your time. This page covers the everyday task
 
 Open it with **Mail** in the app rail, or press `Ctrl+Shift+M`.
 
-![The inbox](/img/screenshots/mail-inbox.png)
+![The inbox](/img/screenshots/mail-inbox-light.webp#light)![The inbox](/img/screenshots/mail-inbox-dark.webp#dark)
 
 ## The parts of the screen
 

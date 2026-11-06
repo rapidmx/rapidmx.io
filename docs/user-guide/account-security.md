@@ -19,7 +19,7 @@ Your sign-in password and your [encryption password](encryption.md) are two diff
 3. Choose how to sign in, if you have more than one way, and follow the steps: type your **Password**, use your passkey, enter the code from your authenticator app, or enter a **One-time code** sent to your email or phone.
 4. If your account uses two-step sign-in, **Verify it's you** asks for your second step.
 
-![The sign-in page](/img/screenshots/sign-in.png)
+![The sign-in page](/img/screenshots/sign-in-light.webp#light)![The sign-in page](/img/screenshots/sign-in-dark.webp#dark)
 
 Other options on the sign-in page, depending on what your organization has turned on:
 
@@ -28,7 +28,7 @@ Other options on the sign-in page, depending on what your organization has turne
 
 **Confirm it's you.** Before some sensitive actions, such as opening the admin console, RapidMX asks for your password again in **Confirm it's you**.
 
-![Confirm it's you](/img/screenshots/confirm-password.png)
+![Confirm it's you](/img/screenshots/confirm-password-light.webp#light)![Confirm it's you](/img/screenshots/confirm-password-dark.webp#dark)
 
 **Forgot your password?** There is no "forgot password" link. Sign in another way if you have one (a passkey or a one-time code), or ask your administrator to set a temporary password. You'll be asked to choose a new one the next time you sign in.
 

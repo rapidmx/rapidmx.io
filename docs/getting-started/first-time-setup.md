@@ -19,12 +19,12 @@ place of `https://mail.example.com` below.
 1. Open `https://mail.example.com`. It sends you to the sign-in page at `auth.example.com`. Enter `admin`, then the
    password.
 
-   ![The sign-in page](/img/screenshots/sign-in.png)
+   ![The sign-in page](/img/screenshots/sign-in-light.webp#light)![The sign-in page](/img/screenshots/sign-in-dark.webp#dark)
 
 2. Open the admin console at `https://mail.example.com/admin`. It asks for your password once more. The admin console
    asks you to confirm it's you whenever your sign-in isn't recent, because its actions affect the whole server.
 
-   ![The "Confirm it's you" dialog](/img/screenshots/confirm-password.png)
+   ![The "Confirm it's you" dialog](/img/screenshots/confirm-password-light.webp#light)![The "Confirm it's you" dialog](/img/screenshots/confirm-password-dark.webp#dark)
 
 The **Set up your server** wizard opens on its own until setup is finished. You can come back to it later from the
 **Mailboxes** page.
@@ -49,7 +49,7 @@ Plugins add protocols and features to the server. The recommended ones are alrea
 Leave them as they are and click **Continue**. Changing plugins restarts the server copies one at a time, so mail keeps
 flowing. [Plugins](../administration/plugins.md) covers adding and removing them later.
 
-![The setup wizard, plugins step](/img/screenshots/setup-plugins.png)
+![The setup wizard, plugins step](/img/screenshots/setup-plugins-light.webp#light)![The setup wizard, plugins step](/img/screenshots/setup-plugins-dark.webp#dark)
 
 ## Step 2: Domain
 
@@ -64,7 +64,7 @@ DNS](../administration/dns-publishing.md). Otherwise:
 3. Click **Verify now**. The domain's verification status changes once the ownership record is found, and each row of
    the **DNS setup checklist** turns **Live** once its record is found. DNS changes can take a few minutes to appear.
 
-![The DNS setup checklist for example.com](/img/screenshots/setup-domain-dns.png)
+![The DNS setup checklist for example.com](/img/screenshots/setup-domain-dns-light.webp#light)![The DNS setup checklist for example.com](/img/screenshots/setup-domain-dns-dark.webp#dark)
 
 The records look like this. Your ownership token and DKIM key are shown in the console:
 
@@ -118,7 +118,7 @@ Create your own mailbox, for example `admin@example.com`, and click **Create mai
 Leave **Owner user uid** as it is: it links the mailbox to the account you signed in with, which is what lets you open
 it.
 
-![Creating the first mailbox](/img/screenshots/setup-mailbox.png)
+![Creating the first mailbox](/img/screenshots/setup-mailbox-light.webp#light)![Creating the first mailbox](/img/screenshots/setup-mailbox-dark.webp#dark)
 
 You can create more mailboxes here, or later from **Mailboxes** in the admin console. Each person's sign-in account is
 created on the auth-server, see [Users and sign-in](../administration/users-and-sign-in.md).
@@ -133,14 +133,14 @@ Give the sign-in page and the apps your own logo, name and styles, or leave the 
 1. Open `https://mail.example.com` again. Mail asks you to protect your encryption keys: choose an **encryption
    password**, different from your sign-in password. It never leaves your browser.
 
-   ![Choosing an encryption password](/img/screenshots/mail-protect.png)
+   ![Choosing an encryption password](/img/screenshots/mail-protect-light.webp#light)![Choosing an encryption password](/img/screenshots/mail-protect-dark.webp#dark)
 
 2. Save the **recovery codes** it shows next. They are the only way back to your encrypted mail if you forget the
    encryption password. See [Encryption](../user-guide/encryption.md).
 
 3. Your inbox opens.
 
-   ![The inbox](/img/screenshots/mail-inbox.png)
+   ![The inbox](/img/screenshots/mail-inbox-light.webp#light)![The inbox](/img/screenshots/mail-inbox-dark.webp#dark)
 
 :::tip Good to know
 Mail only flows once your DNS records are in place and a mail server is running. The Docker Compose quick start has

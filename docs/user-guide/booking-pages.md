@@ -104,6 +104,8 @@ Pictures are cropped and resized for you, so any photo works. They're saved as s
 
 ## What the visitor sees
 
+![A booking page as a visitor sees it](/img/screenshots/booking-pages-light.webp#light)![A booking page as a visitor sees it](/img/screenshots/booking-pages-dark.webp#dark)
+
 When someone opens your link, they see your name, your banner and picture, the link's name and description, and
 the open times.
 

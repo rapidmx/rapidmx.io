@@ -69,6 +69,8 @@ Open **Settings** in the CRM's menu. Admins and owners can change these sections
 
 ## Contacts and companies
 
+![A CRM workspace's contacts](/img/screenshots/crm-light.webp#light)![A CRM workspace's contacts](/img/screenshots/crm-dark.webp#dark)
+
 **Contacts** are people, and **Companies** are the businesses they work for. Both are in the CRM's menu. A new
 contact is linked automatically to the company whose website domain matches their email address.
 

@@ -10,6 +10,8 @@ Search finds messages by any word in them, including the text of attached PDF, W
 
 ## Search your mail
 
+![Search results for "onboarding"](/img/screenshots/search-light.webp#light)![Search results for "onboarding"](/img/screenshots/search-dark.webp#dark)
+
 1. Click the search box above the message list (it says "Search all mail…"), or press `/`.
 2. Type what you're looking for. Results appear as you type.
 3. Press `Escape`, or open another folder, to clear the search.

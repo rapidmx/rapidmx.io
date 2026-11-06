@@ -12,6 +12,8 @@ Open it with **Calendar** in the app rail, or press `Ctrl+Shift+C`.
 
 ## Move around the calendar
 
+![The calendar in Month view](/img/screenshots/calendar-light.webp#light)![The calendar in Month view](/img/screenshots/calendar-dark.webp#dark)
+
 - **Change the view** with the buttons at the top: **List**, **Month**, **Week**, **Work Week**, **Day** and **Split**. **Split** puts each of your calendars side by side for one day. (**Work Week** and **Split** aren't offered on a phone.) The app remembers your choice on each device.
 - **Move in time** with **‹** and **›**, or go back with **Today**. On a phone, swipe left or right.
 - **Jump to a date** with the small month calendar on the left. In **Month** view, click a day's number to open that day.

@@ -179,9 +179,14 @@ developers/contributing.md
 developers/security.md
 ```
 
-Screenshots available under `static/img/screenshots/` (from `server/docs/images`): `sign-in.png`,
-`confirm-password.png`, `setup-plugins.png`, `setup-domain-dns.png`, `setup-mailbox.png`,
-`mail-protect.png`, `mail-inbox.png`. Reference as `/img/screenshots/<name>.png`.
+Screenshots live in `static/img/screenshots/` as `<name>-light.webp` and `<name>-dark.webp`, captured at
+2x: `sign-in`, `confirm-password`, `setup-plugins`, `setup-domain-dns`, `setup-mailbox`, `mail-protect`,
+`mail-inbox`, and one per user guide: `calendar`, `contacts`, `tasks`, `search`, `settings`,
+`rules-and-automatic-replies`, `import-export`, `booking-pages`, `video-meetings`, `shared-mailboxes`, `crm`
+(Chat has none: the plugin has no screens yet). In Markdown, write both, with anchors that `custom.css` uses to show the one matching the theme
+(it also halves the display width of the narrow ones):
+`![Alt](/img/screenshots/<name>-light.webp#light)![Alt](/img/screenshots/<name>-dark.webp#dark)`.
+On the landing page, `<BrowserFrame shot="<name>">` renders both through `ThemedImage`.
 
 ## Session Log
 
@@ -201,7 +206,7 @@ Screenshots available under `static/img/screenshots/` (from `server/docs/images`
   chat is "Coming soon" (chat-plugin is an empty skeleton); the encryption policy defaults to
   `optional`, not automatic (zero-access, a separate setting, defaults to on); vault unlock by passkey isn't wired into the UI; calendar share links
   have no UI; scanner outage = ClamAV quarantines, rspamd sends to Junk.
-- Screenshots in `static/img/screenshots` are stale: the wizard ones show Branding before Mailboxes
+- (Superseded 2026-11-06: screenshots retaken.) Screenshots in `static/img/screenshots` were stale: the wizard ones show Branding before Mailboxes
   (web-client 0.35 moved Branding last), `sign-in.png` shows RapidREST branding, and the inbox is
   empty. Retake them, ideally with a populated inbox for the landing page hero.
 - The section agents' full lists of source contradictions and unverified points (stale READMEs,
@@ -218,3 +223,29 @@ Screenshots available under `static/img/screenshots/` (from `server/docs/images`
 - Unverified: that Outlook over MAPI can actually open zero-access mail with exported keys. The mapi release notes and the
   settings copy say so, but nothing here tested it, and Outlook itself is still "in progress".
 - `setup-domain-dns.png` predates the Published column, the `_rapidmx-verify` name and the OpenPGP row: retake with the others.
+
+### 2026-11-06 — Screenshots retaken in light and dark, Grommunio added to Compare
+
+- Retook every screenshot from a local Docker Compose stack (server 1.0.0-beta.49, web-client 0.39) with
+  Playwright, once per color scheme. The hero inbox is Alex Morgan's mailbox, filled with sample mail sent
+  to the ingest endpoint (`POST /internal/mta/deliver`, bearer `ChangeMeIngestSecret`); dates, read and
+  flag state were then set in Mongo, since ingest stamps the arrival time. Compose is open in the corner.
+- To get that far locally: the auth-server needed `csrf__allowedOrigins` to include `http://localhost:3001`
+  (otherwise "Confirm it's you" always says the password is wrong); `mail__dns__mx_hostname=mail.example.com`
+  so the checklist doesn't say `localhost`; and acme-client's nested `@peculiar/x509` 1.x removed inside the
+  container, because it hijacks the ECDSA signature formatter of x509 3.x and every key setup fails with
+  `Cannot get schema for 'ECDSASigValue' target`. The published beta.49 image has the same layout.
+- Typing in compose throws "multiple versions of prosemirror-model were loaded" (an error toast, the
+  text still goes in). The toast was dismissed for the hero shot.
+- Grommunio's Compare column comes from grommunio.com, its docs and its GitHub READMEs. "No" for zero-access
+  storage and for booking pages means nothing was found, not that Grommunio says so.
+- Added a screenshot to every user guide but Chat. Sample data was created through the web app (events, a
+  vCard import, tasks, a filter, a booking link, a personal meeting room), plus a shared `support@example.com`
+  mailbox and the CRM plugin 0.4.0 with a CSV import. The meeting join page uses Chrome's fake devices with the
+  camera off; their "Fake ..." labels were renamed in the page to ordinary device names.
+- Seen while doing it: Month view lists a day's events out of time order; an opened zero-access message's list
+  preview turns back into "Encrypted message"; the calendar can only be unlocked from a mail message (no unlock
+  prompt of its own), so a reload in Calendar shows "Protected event" titles.
+- Compare table: added "Deploy your own server in one step" (Grommunio partial: its docs describe an appliance ISO,
+  a console setup, then `grommunio-setup`), and the plugins row now says server-side, with Google and Microsoft
+  marked client-side only.

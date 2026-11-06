@@ -12,6 +12,8 @@ Open it with **Contacts** in the app rail, or press `Ctrl+Shift+B`.
 
 ## Find your way around
 
+![Your contacts, with one open](/img/screenshots/contacts-light.webp#light)![Your contacts, with one open](/img/screenshots/contacts-dark.webp#dark)
+
 The list on the left has:
 
 - **All contacts**: your contacts plus suggested ones.

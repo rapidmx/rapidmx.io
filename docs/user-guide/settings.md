@@ -42,6 +42,8 @@ Click **Save**.
 
 ## Appearance
 
+![Settings > Appearance](/img/screenshots/settings-light.webp#light)![Settings > Appearance](/img/screenshots/settings-dark.webp#dark)
+
 Every change shows at once across the whole app and is saved automatically to your account.
 
 - **Colour scheme**: **System** (follow your device), **Light** or **Dark**. You can also switch it from **Theme** in the account menu.

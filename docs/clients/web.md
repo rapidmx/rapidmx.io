@@ -13,12 +13,12 @@ The web app is the main way to use RapidMX. It has everything: mail, calendar, c
 1. In your browser, go to your organization's mail address, for example `https://mail.example.com`. Your administrator can tell you the exact address.
 2. You are sent to the sign-in page. Enter your user name and password, or use another sign-in method you have set up, such as a passkey. See [Sign-in and account security](../user-guide/account-security.md).
 
-   ![The sign-in page](/img/screenshots/sign-in.png)
+   ![The sign-in page](/img/screenshots/sign-in-light.webp#light)![The sign-in page](/img/screenshots/sign-in-dark.webp#dark)
 
 3. The first time, Mail asks you to protect your encryption keys with an encryption password. See [Encryption](../user-guide/encryption.md).
 4. Your inbox opens.
 
-   ![The inbox](/img/screenshots/mail-inbox.png)
+   ![The inbox](/img/screenshots/mail-inbox-light.webp#light)![The inbox](/img/screenshots/mail-inbox-dark.webp#dark)
 
 You stay signed in while the page is open: the app renews your sign-in in the background.
 

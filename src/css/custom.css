@@ -117,6 +117,28 @@ h3 {
   --ifm-footer-background-color: #0b1416;
 }
 
+/* Screenshots come in a light and a dark capture; show the one matching the theme. */
+[data-theme='light'] img[src$='#dark'],
+[data-theme='dark'] img[src$='#light'] {
+  display: none;
+}
+
+/* They are captured at 2x, so show each at half its pixel width (Docusaurus sets `width` from the file). */
+.markdown img[src$='#light'][width='1200'],
+.markdown img[src$='#dark'][width='1200'] {
+  max-width: min(100%, 600px);
+}
+
+.markdown img[src$='#light'][width='1600'],
+.markdown img[src$='#dark'][width='1600'] {
+  max-width: min(100%, 800px);
+}
+
+.markdown img[src$='#light'][width='1760'],
+.markdown img[src$='#dark'][width='1760'] {
+  max-width: min(100%, 880px);
+}
+
 /* Docs: give screenshots a frame so white UI doesn't bleed into the page. */
 .markdown img {
   border-radius: 0.6rem;

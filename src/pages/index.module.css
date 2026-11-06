@@ -574,7 +574,7 @@
 
 .compareWrap {
   overflow-x: auto;
-  max-width: 64rem;
+  max-width: 72rem;
   margin: 0 auto;
 }
 
@@ -610,7 +610,7 @@
 .compare tbody th {
   text-align: left;
   font-weight: 600;
-  width: 32%;
+  width: 24%;
 }
 
 .compare .compareUs {

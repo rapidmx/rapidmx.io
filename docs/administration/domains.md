@@ -54,7 +54,7 @@ Domains under a reserved top-level domain that can never exist on the public int
 
 Below the ownership record, **DNS setup checklist** lists every record mail for this domain needs, and checks each one live against public DNS every time you open the page.
 
-![The DNS setup checklist for example.com](/img/screenshots/setup-domain-dns.png)
+![The DNS setup checklist for example.com](/img/screenshots/setup-domain-dns-light.webp#light)![The DNS setup checklist for example.com](/img/screenshots/setup-domain-dns-dark.webp#dark)
 
 | Record | Name / host | Recommended value | What it does |
 | --- | --- | --- | --- |

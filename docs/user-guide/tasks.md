@@ -12,6 +12,8 @@ Open it with **Tasks** in the app rail, or press `Ctrl+Shift+L`.
 
 ## Views
 
+![The task list](/img/screenshots/tasks-light.webp#light)![The task list](/img/screenshots/tasks-dark.webp#dark)
+
 The list on the left shows your tasks in different ways:
 
 | View | Shows |

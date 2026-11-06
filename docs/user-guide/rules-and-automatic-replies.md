@@ -10,6 +10,8 @@ Some mail can be handled without you. **Mail filters** (rules) file, copy, mark 
 
 ## Create a mail filter
 
+![The Mail Filters page with one filter](/img/screenshots/rules-and-automatic-replies-light.webp#light)![The Mail Filters page with one filter](/img/screenshots/rules-and-automatic-replies-dark.webp#dark)
+
 1. Open **Settings** > **Mail Filters** and click **+ New filter**.
 2. Give it a **Name**, for example "File newsletters".
 3. Under **Conditions**, say which messages it applies to. Type a value and click **Add** (or press `Enter`):

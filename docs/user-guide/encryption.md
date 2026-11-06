@@ -26,7 +26,7 @@ Your organization decides how much of this is available, and how much of it is a
 
 The first time you open Mail, you see **Protect your mailbox**.
 
-![Choosing an encryption password](/img/screenshots/mail-protect.png)
+![Choosing an encryption password](/img/screenshots/mail-protect-light.webp#light)![Choosing an encryption password](/img/screenshots/mail-protect-dark.webp#dark)
 
 1. Type an **Encryption password** of 12 or more characters, and type it again in **Confirm password**. A passphrase of several unrelated words is long enough and easy to remember. Don't reuse your sign-in password.
 2. Click **Continue**.

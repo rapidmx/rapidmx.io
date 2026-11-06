@@ -68,6 +68,8 @@ public meeting's link, or **Cancel** to cancel a scheduled meeting.
 
 ## Join a meeting
 
+![The page you see before joining a meeting](/img/screenshots/video-meetings-light.webp#light)![The page you see before joining a meeting](/img/screenshots/video-meetings-dark.webp#dark)
+
 These steps are the same for you and your guests.
 
 1. Open the join link. The page shows the meeting's title and who is hosting it.

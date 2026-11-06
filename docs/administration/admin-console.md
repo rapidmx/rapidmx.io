@@ -34,7 +34,7 @@ You need two things:
 - **The `admin` role** on your account. The `admin` account created at install time has it. To give it to someone else, see [Users and sign-in](users-and-sign-in.md#make-someone-an-administrator).
 - **A recently confirmed identity.** Your normal sign-in is not enough. When you open the console, your browser is sent to the sign-in server, which asks you to confirm it's you (for example, by entering your password again), and then brings you back.
 
-![The "Confirm it's you" prompt](/img/screenshots/confirm-password.png)
+![The "Confirm it's you" prompt](/img/screenshots/confirm-password-light.webp#light)![The "Confirm it's you" prompt](/img/screenshots/confirm-password-dark.webp#dark)
 
 Signed-in administrators also find an **Admin Console** item in the account menu of the mail app.
 

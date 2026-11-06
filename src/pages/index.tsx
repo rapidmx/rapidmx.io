@@ -5,6 +5,7 @@ import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
+import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import useBrokenLinks from '@docusaurus/useBrokenLinks';
 
@@ -191,14 +192,17 @@ function Hero(): ReactNode {
           </ul>
         </div>
         <div className={styles.heroShot}>
-          <BrowserFrame src="/img/screenshots/mail-inbox.png" alt="The RapidMX inbox in a web browser" url="mail.example.com" />
+          <BrowserFrame shot="mail-inbox" alt="The RapidMX inbox in a web browser" url="mail.example.com" />
         </div>
       </div>
     </header>
   );
 }
 
-function BrowserFrame({src, alt, url}: {src: string; alt: string; url: string}): ReactNode {
+// `shot` names a screenshot in static/img/screenshots, captured once per color mode as <shot>-light/-dark.webp
+function BrowserFrame({shot, alt, url}: {shot: string; alt: string; url: string}): ReactNode {
+  const light = useBaseUrl(`/img/screenshots/${shot}-light.webp`);
+  const dark = useBaseUrl(`/img/screenshots/${shot}-dark.webp`);
   return (
     <figure className={styles.browser}>
       <div className={styles.browserBar}>
@@ -210,7 +214,7 @@ function BrowserFrame({src, alt, url}: {src: string; alt: string; url: string}):
           {url}
         </div>
       </div>
-      <img src={useBaseUrl(src)} alt={alt} loading="eager" />
+      <ThemedImage sources={{light, dark}} alt={alt} loading="eager" />
     </figure>
   );
 }
@@ -548,7 +552,7 @@ function Admin(): ReactNode {
           </Link>
         </div>
         <div className={styles.splitShot}>
-          <BrowserFrame src="/img/screenshots/setup-domain-dns.png" alt="The DNS checklist for a new domain" url="mail.example.com/admin" />
+          <BrowserFrame shot="setup-domain-dns" alt="The DNS checklist for a new domain" url="mail.example.com/admin" />
         </div>
       </div>
     </section>
@@ -653,20 +657,21 @@ const yes = (note?: string): Cell => ({v: 'yes', note});
 const no = (note?: string): Cell => ({v: 'no', note});
 const partial = (note: string): Cell => ({v: 'partial', note});
 
-const COMPARE: {row: string; rmx: Cell; google: Cell; ms: Cell}[] = [
-  {row: 'Runs on servers you control', rmx: yes(), google: no('Provider cloud only'), ms: no('Provider cloud only')},
-  {row: 'Source code you can read and audit', rmx: yes('MPL-2.0'), google: no(), ms: no()},
-  {row: 'Licensing', rmx: yes('Free, any number of users'), google: no('Per user, per month'), ms: no('Per user, per month')},
-  {row: 'You choose where data is stored', rmx: yes('Any country, any host'), google: partial('Data regions on some plans'), ms: partial('Data residency on some plans')},
-  {row: 'Stored data unreadable to the operator', rmx: yes('Zero-access, on by default'), google: partial('Customer-managed keys on top tiers'), ms: partial('Customer-managed keys on top tiers')},
-  {row: 'End-to-end encryption for every user', rmx: yes('S/MIME and OpenPGP, built in'), google: partial('Client-side encryption on top tiers'), ms: partial('S/MIME with your own PKI')},
-  {row: 'Mail, calendar, contacts and tasks', rmx: yes(), google: yes(), ms: yes()},
-  {row: 'Video meetings', rmx: yes('via Plugin'), google: yes(), ms: yes()},
-  {row: 'Booking pages', rmx: yes('via Plugin'), google: yes(), ms: yes()},
-  {row: 'Works with existing apps', rmx: yes('Exchange ActiveSync'), google: yes(), ms: yes()},
-  {row: 'Retention, legal hold and eDiscovery', rmx: yes('Included'), google: partial('Higher tiers'), ms: partial('Higher tiers')},
-  {row: 'Extend with your own plugins', rmx: yes('npm packages'), google: partial('Marketplace add-ons'), ms: partial('Add-ins')},
-  {row: 'Documents, spreadsheets and file storage', rmx: no('Coming soon'), google: yes(), ms: yes()},
+const COMPARE: {row: string; rmx: Cell; google: Cell; ms: Cell; grommunio: Cell}[] = [
+  {row: 'Runs on servers you control', rmx: yes(), google: no('Provider cloud only'), ms: no('Provider cloud only'), grommunio: yes('On-premises or private cloud')},
+  {row: 'Deploy your own server in one step', rmx: yes('One command on a Linux server'), google: no('No self-hosted option'), ms: no('No self-hosted option'), grommunio: partial('Appliance image, then setup wizards')},
+  {row: 'Source code you can read and audit', rmx: yes('MPL-2.0'), google: no(), ms: no(), grommunio: yes('AGPL-3.0')},
+  {row: 'Licensing', rmx: yes('Free, any number of users'), google: no('Per user, per month'), ms: no('Per user, per month'), grommunio: partial('Free up to 5 users, then per user')},
+  {row: 'You choose where data is stored', rmx: yes('Any country, any host'), google: partial('Data regions on some plans'), ms: partial('Data residency on some plans'), grommunio: yes('Any host you run')},
+  {row: 'Stored data unreadable to the operator', rmx: yes('Zero-access, on by default'), google: partial('Customer-managed keys on top tiers'), ms: partial('Customer-managed keys on top tiers'), grommunio: no()},
+  {row: 'End-to-end encryption for every user', rmx: yes('S/MIME and OpenPGP, built in'), google: partial('Client-side encryption on top tiers'), ms: partial('S/MIME with your own PKI'), grommunio: yes('S/MIME and OpenPGP')},
+  {row: 'Mail, calendar, contacts and tasks', rmx: yes(), google: yes(), ms: yes(), grommunio: yes()},
+  {row: 'Video meetings', rmx: yes('via Plugin'), google: yes(), ms: yes(), grommunio: yes('grommunio Meet')},
+  {row: 'Booking pages', rmx: yes('via Plugin'), google: yes(), ms: yes(), grommunio: no()},
+  {row: 'Works with existing apps', rmx: yes('Exchange ActiveSync'), google: yes(), ms: yes(), grommunio: yes('Outlook (MAPI), ActiveSync')},
+  {row: 'Retention, legal hold and eDiscovery', rmx: yes('Included'), google: partial('Higher tiers'), ms: partial('Higher tiers'), grommunio: yes('grommunio Archive')},
+  {row: 'Extend the server with your own plugins', rmx: yes('Server and app plugins, as npm packages'), google: partial('Client-side add-ons only'), ms: partial('Client-side add-ins only'), grommunio: partial('Web app plugins')},
+  {row: 'Documents, spreadsheets and file storage', rmx: no('Coming soon'), google: yes(), ms: yes(), grommunio: yes('Nextcloud and OnlyOffice based')},
 ];
 
 function Mark({cell}: {cell: Cell}): ReactNode {
@@ -690,7 +695,7 @@ function Compare(): ReactNode {
           <Heading as="h2">How RapidMX stacks up</Heading>
           <p>
             RapidMX focuses on communication: mail, scheduling and meetings. If that's what you rely on Google
-            Workspace or Microsoft 365 for, here's what changes when switch to RapidMX.
+            Workspace or Microsoft 365 for, here's what changes when you switch to RapidMX. Grommunio is here too, as a self-hosted alternative.
           </p>
         </div>
         <div className={styles.compareWrap}>
@@ -703,6 +708,7 @@ function Compare(): ReactNode {
                 </th>
                 <th scope="col">Google Workspace</th>
                 <th scope="col">Microsoft 365</th>
+                <th scope="col">Grommunio</th>
               </tr>
             </thead>
             <tbody>
@@ -718,6 +724,9 @@ function Compare(): ReactNode {
                   <td>
                     <Mark cell={c.ms} />
                   </td>
+                  <td>
+                    <Mark cell={c.grommunio} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -725,7 +734,7 @@ function Compare(): ReactNode {
         </div>
         <p className={styles.footnote}>
           Based on publicly available plan information as of 2026. Features and plans of other providers change; check
-          with them for current details. Google Workspace and Microsoft 365 are trademarks of their respective owners.
+          with them for current details. Google Workspace, Microsoft 365 and Grommunio are trademarks of their respective owners.
         </p>
       </div>
     </section>

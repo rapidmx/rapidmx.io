@@ -12,6 +12,8 @@ Importing, exporting and deleting your account only work for your own mailbox, n
 
 ## Import mail from another account
 
+![Settings > Privacy & Data](/img/screenshots/import-export-light.webp#light)![Settings > Privacy & Data](/img/screenshots/import-export-dark.webp#dark)
+
 Most mail programs and providers can export a mailbox as an **mbox** file, and Outlook saves mail as a **PST** file. RapidMX can import either.
 
 1. Export your mail from your old program as an `.mbox` or `.pst` file.
